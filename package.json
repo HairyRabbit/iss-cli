@@ -1,0 +1,36 @@
+{
+  "name": "bug-cli",
+  "version": "0.0.0",
+  "description": "A cli for bug report",
+  "main": "index.js",
+  "scripts": {
+    "start": "tsc -w",
+    "test": "jest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/HairyRabbit/bug-cli.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/HairyRabbit/bug-cli/issues"
+  },
+  "homepage": "https://github.com/HairyRabbit/bug-cli#readme",
+  "devDependencies": {
+    "@types/node": "^12.0.2",
+    "@types/yargs": "^13.0.0",
+    "jest": "^24.8.0",
+    "ts-jest": "^24.0.2",
+    "typescript": "^3.4.5"
+  },
+  "dependencies": {
+    "chalk": "^2.4.2",
+    "github-api": "^3.2.0",
+    "marked": "^0.6.2",
+    "marked-terminal": "^3.2.0",
+    "util-extra": "0.0.18",
+    "yargs": "^13.2.4"
+  }
+}
