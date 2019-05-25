@@ -1,53 +1,92 @@
 import chalk from 'chalk'
 import { Arguments, Argv } from 'yargs'
 import toLocalString, { Type } from 'util-extra/date/toLocalString'
-import bug from '../bug'
-import { Bug, BugState } from '../provider'
-
+import iss from '../issue'
+import { Issue, FindOptions } from '../provider'
+import { State } from '../state'
+import { newline } from '../tui'
 
 export const command: string = 'ls'
-export const desc: string = 'list bugs'
+export const desc: string = 'List issues'
 
-interface ListBugsOptions {
-  verbose: boolean
+interface ListIssueOptions {
+  url: boolean
   status: boolean
+  open: boolean
+  closed: boolean
+  all: boolean
 }
 
-const DEFAULT_LISTBUGS_OPTIONS: ListBugsOptions = {
-  verbose: false,
-  status: false
+const DEFAULT_LISTBUGS_OPTIONS: ListIssueOptions = {
+  url: false,
+  status: false,
+  open: true,
+  closed: false,
+  all: false
 }
 
-export function builder(yargs: Argv<ListBugsOptions>): void {
+export function builder(yargs: Argv<ListIssueOptions>): void {
   yargs
     .option(`verbose`, {
       type: `boolean`,
-      description: `show url`,
+      description: `Show link for each issue`,
       default: false
     })
     .option(`status`, {
       type: `boolean`,
-      description: `show bugs status`,
+      description: `Show issues summary over list`,
+      default: false
+    })
+    .option(`open`, {
+      type: `boolean`,
+      description: `Only show open state issues`,
+      default: true
+    })
+    .option(`closed`, {
+      type: `boolean`,
+      alias: 'c',
+      description: `Only show closed state issues`,
+      default: false
+    })
+    .option(`all`, {
+      type: `boolean`,
+      alias: 'a',
+      description: `Show all state issues`,
       default: false
     })
 }
 
-export async function handler(args: Arguments<ListBugsOptions>): Promise<void> {
-  const options: ListBugsOptions = {
+export async function handler(args: Arguments<ListIssueOptions>): Promise<void> {
+  const options: ListIssueOptions = {
     ...DEFAULT_LISTBUGS_OPTIONS,
-    verbose: args.verbose,
-    status: args.status
+    url: args.url,
+    status: args.status,
+    open: args.open,
+    closed: args.closed,
+    all: args.all
   }
-  const bugs = await bug.listBugs()
-  renderBugsList(bugs, process.stdout.columns || 80, options)
+  const bugs = await iss.listIssues(mapListIssueOptionsToFindOptions(options))
+  renderList(bugs, process.stdout.columns || 80, options)
 }
 
-function renderBugsList(bugs: Bug[], maxLength: number, options: ListBugsOptions): void {
-  const { status, verbose } = options
+function mapListIssueOptionsToFindOptions(options: ListIssueOptions): FindOptions {
+  return {
+    state: transformListIssueStateOptions(options)
+  }
+}
+
+function transformListIssueStateOptions(options: ListIssueOptions): FindOptions['state'] {
+  if(options.all) return 'all'
+  else if(options.closed) return State.Close
+  else return State.Open
+}
+
+function renderList(bugs: Issue[], maxLength: number, options: ListIssueOptions): void {
+  const { status, url: verbose } = options
   
 
   const len = bugs.length
-  const openedLen: number = bugs.filter(b => b.state === BugState.Open).length
+  const openedLen: number = bugs.filter(b => b.state === State.Open).length
 
   if(status) {
     console.log(`
@@ -89,7 +128,7 @@ Closed: ${chalk.gray((len - openedLen).toString())}
       const numberStr = '#' + number.toString().padEnd(state.maxNumberLength)
       const titleStr = title.length + 3 >= max ? title.substring(0, max - 3) + '...' : title.padEnd(max)
       const createStr = toLocalString(createAt, Type.Date)
-      const method = bugState === BugState.Open ? chalk.blue : chalk.redBright
+      const method = bugState === State.Open ? chalk.blue : chalk.gray
       
       console.log([
         method(numberStr), 
@@ -113,6 +152,6 @@ Closed: ${chalk.gray((len - openedLen).toString())}
   const constLen: number = (state.maxNumberLength + 10 + 3)
   const max: number = maxLength - constLen
   
-  console.log('')
+  newline()
   procs.forEach(proc => proc(state, max))
 }

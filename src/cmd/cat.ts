@@ -2,16 +2,20 @@ import chalk from 'chalk'
 import marked from 'marked'
 import TerminalRenderer from 'marked-terminal'
 import toLocalString, { Type } from 'util-extra/date/toLocalString'
-import bug from '../bug'
-import { Bug, BugState, Label } from '../provider'
+import { startCase } from 'lodash'
+import iss from '../issue'
+import { Issue, Label } from '../provider'
+import { State } from '../state'
+import { newline } from '../tui'
 
 
 export default async function handler(number: number): Promise<void> {
-  const _bug = await bug.getBug(number)
-  renderBug(_bug)
+  const issue = await iss.getIssue(number)
+  if(null === issue) return renderEmpty(number)
+  renderIssue(issue)
 }
 
-function renderBug(bug: Bug): void {
+function renderIssue(bug: Issue): void {
   const { title, state, body, url, createAt, updateAt, labels } = bug
 
   console.log('')
@@ -31,28 +35,25 @@ function renderBug(bug: Bug): void {
   })
   console.log('')
 
-  if('' !== body.trim()) {
-    renderBody(body)
-    console.log('')
-  }
+  '' === body.trim() ? console.log(chalk.italic.gray(`No description`)) : renderBody(body.trim())
+  console.log('')
 }
 
 function renderMeta(meta: { [key: string]: any }): void {
   const keys = Object.keys(meta)
-  // const max: number = Math.max.apply(null, keys.map(str => str.length))
   
   console.log(`--------`)
   keys.forEach(key => {
     const val = meta[key]
-    console.log(key + ': ' + chalk.gray(val))
+    console.log(startCase(key) + ': ' + chalk.gray(val))
   })
   console.log(`--------`)
 }
 
-function styleState(state: BugState): string {
+function styleState(state: State): string {
   switch(state) {
-    case BugState.Open: return chalk.bold.blue('OPEN')
-    case BugState.Close: return chalk.bold.gray('CLOSE')
+    case State.Open: return chalk.bold.blue('OPEN')
+    case State.Close: return chalk.bold.gray('CLOSE')
   }
 }
 
@@ -60,7 +61,7 @@ function styleLabel({ color, name }: Label): string {
   return chalk.bold.bgHex(color)(` ${name} `)
 }
 
-function renderHeader(title: string, state: BugState): void {
+function renderHeader(title: string, state: State): void {
   const stateStr: string = styleState(state)
   console.log(stateStr + ' ' + chalk.italic(title))
 }
@@ -75,4 +76,11 @@ function renderBody(body: string): void {
   })
 
   console.log(marked(body))
+}
+
+function renderEmpty(id: number): void {
+  newline()
+  console.log(`Not found issue ${chalk.bold.red(`#${id.toString()}`)}`)
+  console.log(`Try type "iss ls" to list open issues`)
+  newline()
 }

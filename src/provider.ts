@@ -1,16 +1,16 @@
-export const enum BugState { Open, Close }
+import { State } from './state'
 
 export type Label = {
   color: string,
   name: string
 }
 
-export interface Bug {
+export interface Issue {
   id: number
   number: number
   title: string
   body: string
-  state: BugState
+  state: State
   url: string
   labels: { color: string, name: string }[]
   createAt: Date
@@ -18,9 +18,14 @@ export interface Bug {
   closeAt: null | Date
 }
 
-export interface Provider {
-  find(): Promise<Bug[]>
-  get(number: number): Promise<Bug>
+export interface FindOptions {
+  state?: State | 'all'
+  labels?: string[]
+}
+
+export interface IProvider {
+  find(options?: FindOptions): Promise<Issue[]>
+  get(number: number): Promise<Issue | null>
   // update(): Promise<Bug>
   // create(): Promise<Bug>
   // destroy(): Promise<void>
