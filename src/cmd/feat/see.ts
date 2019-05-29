@@ -1,5 +1,5 @@
 import { Arguments, Argv } from 'yargs'
-import iss from '../issue'
+import iss from '../../issue'
 
 export const command: string = 'see <id>'
 export const desc: string = 'Open a issue with browser by id'

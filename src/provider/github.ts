@@ -1,9 +1,8 @@
 import GitHubAPI, { GithubIssue, Issue, IssueCreateOptions, IssueFindOptions } from 'github-api'
-import { IProvider, Issue as ProviderIssue, FindOptions } from '../provider'
-import {  } from '../issue'
+import { Provider, Issue as ProviderIssue, FindOptions } from '../provider'
 import { parseState } from '../state'
 
-export default class Github implements IProvider {
+export default class Github implements Provider {
   private provider: GitHubAPI
   private issues: Issue
 
@@ -12,7 +11,8 @@ export default class Github implements IProvider {
       username: 'HairyRabbit',
       password: '900416az'
     })
-    this.issues = this.provider.getIssues('HairyRabbit', 'Rest')
+    // this.issues = this.provider.getIssues('HairyRabbit', 'Rest')
+    this.issues = this.provider.getIssues('microsoft', 'TypeScript')
   }
 
   async find(options: Partial<FindOptions>) {

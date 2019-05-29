@@ -1,9 +1,8 @@
-// import chalk from 'chalk'
 import { Arguments, Argv } from 'yargs'
-import iss from '../issue'
+import iss from '../../issue'
 
-export const command: string = 'close <id> [options]'
-export const desc: string = 'Close a issue by id'
+export const command: string = 'see <id>'
+export const desc: string = 'Open a issue with browser by id'
 
 interface Options {
   id: number
@@ -18,7 +17,7 @@ export function builder(yargs: Argv<Options>): void {
 }
 
 export async function handler(args: Arguments<Options>): Promise<void> {
-  const id = args.id
-  await iss.closeIssue(id)
-  console.log(`Closed #${id}`)
+  const id: number = args.id
+  const link = await iss.openBrowserIssue(id)
+  console.log(`Open browser and visite #${link}`)
 }

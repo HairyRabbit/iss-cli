@@ -1,13 +1,10 @@
 import open from 'open'
 import GitHub from './provider/github'
-import { FindOptions } from './provider'
+import { Provider, FindOptions, Issue } from './provider'
+import { Optional, None, Some } from 'util-extra/container/optional'
 
-class Issues {
-  private provider: GitHub
-
-  constructor() {
-    this.provider = new GitHub()
-  }
+class IssueHost {
+  constructor(private provider: Provider) {}
 
   public async listIssues(options: FindOptions) {
     return await this.provider.find(options)
@@ -29,12 +26,13 @@ class Issues {
     return await this.provider.update(number, { state: 'open' })
   }
 
-  public async openBrowserIssue(number: number): Promise<string | null> {
+  public async openBrowserIssue(number: number): Promise<Optional<[Issue, (() => void)]>> {
     const issue = await this.getIssue(number)
-    if(null === issue) return null
-    await open(issue.url)
-    return issue.url
+    if(null === issue) return None
+    const fn = async () => await open(issue.url)
+    return Some([issue, fn])
   }
 }
 
-export default new Issues()
+export const github = new IssueHost(new GitHub)
+export default github

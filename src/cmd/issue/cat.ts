@@ -3,13 +3,29 @@ import marked from 'marked'
 import TerminalRenderer from 'marked-terminal'
 import toLocalString, { Type } from 'util-extra/date/toLocalString'
 import { startCase } from 'lodash'
-import iss from '../issue'
-import { Issue, Label } from '../provider'
-import { State } from '../state'
-import { newline } from '../tui'
+import { Argv, Arguments } from 'yargs'
+import iss from '../../issue'
+import { Issue, Label } from '../../provider'
+import { State } from '../../state'
+import { newline } from '../../tui'
 
+export const command: string = '$0 [number] [options]'
+export const desc: string = 'Show issue details by id'
 
-export default async function handler(number: number): Promise<void> {
+interface Options {
+  number: number
+}
+
+export function builder(yargs: Argv<Options>): void {
+  yargs
+    .positional('number', {
+      desc: 'Issue number',
+      type: 'number'
+    })
+}
+
+export async function handler(args: Arguments<Options>): Promise<void> {
+  const number = args.number
   const issue = await iss.getIssue(number)
   if(null === issue) return renderEmpty(number)
   renderIssue(issue)
@@ -52,8 +68,9 @@ function renderMeta(meta: { [key: string]: any }): void {
 
 function styleState(state: State): string {
   switch(state) {
-    case State.Open: return chalk.bold.blue('OPEN')
-    case State.Close: return chalk.bold.gray('CLOSE')
+    case State.Open: return chalk.bold.blue(State.Open)
+    case State.Close: return chalk.bold.gray(State.Close)
+    default: throw new Error(`Unknown state "${state}"`)
   }
 }
 

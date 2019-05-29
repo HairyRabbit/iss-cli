@@ -23,10 +23,17 @@ export interface FindOptions {
   labels?: string[]
 }
 
-export interface IProvider {
+export interface CreateOptions {
+
+}
+
+export interface UpdateOptions {
+  
+}
+
+export interface Provider {
   find(options?: FindOptions): Promise<Issue[]>
   get(number: number): Promise<Issue | null>
-  // update(): Promise<Bug>
-  // create(): Promise<Bug>
-  // destroy(): Promise<void>
+  update(number: number, options: UpdateOptions): Promise<Issue>
+  create(options: CreateOptions): Promise<Issue>
 }

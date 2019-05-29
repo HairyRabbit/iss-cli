@@ -1,10 +1,10 @@
 // import chalk from 'chalk'
 import { Arguments, Argv } from 'yargs'
-import iss from '../issue'
+import iss from '../../issue'
 
 
 export const command: string = 'add <title> [options]'
-export const desc: string = 'add bug report'
+export const desc: string = 'Add a new issue'
 
 interface CreateIssueOptions {
   title: string

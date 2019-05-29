@@ -1,12 +1,11 @@
 // import yargs from 'yargs'
-// import pkg from '../package.json'
-// import getHandler from './cmd/issue/cat'
-
+// import pkg from '../../package.json'
+// import getHandler from './issue/cat'
 
 // export default function main() {
 //   yargs
 //     .strict()    
-//     .commandDir('./cmd/issue')
+//     .commandDir('./issue')
 //     .command({
 //       command: '$0 [number] [options]',
 //       handler
