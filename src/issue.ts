@@ -1,6 +1,6 @@
 import open from 'open'
 import GitHub from './provider/github'
-import { Provider, FindOptions, Issue } from './provider'
+import { Provider, Issue, FindOptions, CreateOptions } from './provider'
 import { Optional, None, Some } from 'util-extra/container/optional'
 
 class IssueHost {
@@ -14,7 +14,7 @@ class IssueHost {
     return await this.provider.get(number)
   }
 
-  public async createIssue(options: any) {
+  public async createIssue(options: CreateOptions) {
     return await this.provider.create(options)
   }
 

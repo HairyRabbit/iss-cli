@@ -149,7 +149,28 @@ function renderIssue(issue: Issue): void {
   }
 }
 
-function createIssue() {}
+async function createIssue(args: string[]): Promise<void> {
+  const options: Arguments = parseArgs(args, {
+    array: [{ key: 'label' }]
+  })
+
+  const title: string = parseIssueTitle(options).unwrap()
+  const issue: Issue = await host.createIssue({ title, labels: options.lable })
+  
+  renderIssue(issue)
+}
+
+function parseIssueTitle(options: Arguments): Optional<string> {
+  const title = options._[1]
+  
+  if(undefined === title) {
+    printHelper!()
+    return None
+  }
+
+  return Some(title)
+}
+
 function openIssue() {}
 function closeIssue() {}
 

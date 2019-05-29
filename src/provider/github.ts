@@ -1,5 +1,5 @@
 import GitHubAPI, { GithubIssue, Issue, IssueCreateOptions, IssueFindOptions } from 'github-api'
-import { Provider, Issue as ProviderIssue, FindOptions } from '../provider'
+import { Provider, Issue as ProviderIssue, FindOptions, CreateOptions } from '../provider'
 import { parseState } from '../state'
 
 export default class Github implements Provider {
@@ -12,10 +12,10 @@ export default class Github implements Provider {
       password: '900416az'
     })
     // this.issues = this.provider.getIssues('HairyRabbit', 'Rest')
-    this.issues = this.provider.getIssues('microsoft', 'TypeScript')
+    this.issues = this.provider.getIssues('HairyRabbit', 'iss-cli')
   }
 
-  async find(options: Partial<FindOptions>) {
+  async find(options: FindOptions) {
     const transformOptions = mapFindOptionsToIssueFindOptions(options)
     const issues = await this.issues.listIssues(transformOptions)
     return issues.data.map(normalize)
@@ -36,8 +36,9 @@ export default class Github implements Provider {
     }
   }
 
-  async create(options: IssueCreateOptions) {
-    const issue = await this.issues.createIssue(options)
+  async create(options: CreateOptions) {
+    const transformOptions = mapCreateOptionsToIssueCreateOptions(options)
+    const issue = await this.issues.createIssue(transformOptions)
     return normalize(issue.data)
   }
 
@@ -54,11 +55,28 @@ function mapFindOptionsToIssueFindOptions(options: FindOptions): IssueFindOption
   if(options.state) {
     issueFindOptions.state = 'all' === options.state ? 'all' : parseState(options.state)
   } else if(options.labels) {
-    issueFindOptions.labels = options.labels.join(',')
+    issueFindOptions.labels = transformLabels(options.labels)
   }
 
   return issueFindOptions
 }
+
+function mapCreateOptionsToIssueCreateOptions(options: CreateOptions): IssueCreateOptions {
+  const issueCreateOptions = Object.create(null)
+  issueCreateOptions.title = options.title
+
+  if(options.labels) {
+    issueCreateOptions.labels = transformLabels(options.labels)
+  }
+
+  return issueCreateOptions
+}
+
+function transformLabels(labels: string[]) {
+  return labels.join(',')
+}
+
+// function parseLabels(labels: string): Label[]
 
 function normalize(issue: GithubIssue): ProviderIssue {
   return {

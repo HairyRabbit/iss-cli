@@ -24,11 +24,12 @@ export interface FindOptions {
 }
 
 export interface CreateOptions {
-
+  title: string
+  labels?: string[]
 }
 
 export interface UpdateOptions {
-  
+
 }
 
 export interface Provider {
