@@ -1,29 +1,56 @@
-import GitHubAPI, { GithubIssue, Issue, IssueCreateOptions, IssueFindOptions } from 'github-api'
-import { Provider, Issue as ProviderIssue, FindOptions, CreateOptions } from '../provider'
-import { parseState } from '../state'
+import Octokit, { IssuesListForRepoResponseItem, IssuesListForRepoParams, IssuesCreateParams, IssuesUpdateParams } from '@octokit/rest'
+import { Provider, Issue as ProviderIssue, FindOptions, CreateOptions, parseState } from '../provider'
+import config from '../config'
 
 export default class Github implements Provider {
-  private provider: GitHubAPI
-  private issues: Issue
+  public name: string = `github`
+  private provider: Octokit
 
-  constructor() {
-    this.provider = new GitHubAPI({
-      username: 'HairyRabbit',
-      password: '900416az'
-    })
-    // this.issues = this.provider.getIssues('HairyRabbit', 'Rest')
-    this.issues = this.provider.getIssues('HairyRabbit', 'iss-cli')
+  constructor(private token: undefined | string, private user: string, private repo: string) {
+    this.token = token
+    this.user = user
+    this.repo = repo
+    this.provider = new Octokit({ auth: `token ${this.token}` })
+  }
+
+  async auth(username: string, password: string) {
+    const newProvider: Octokit = new Octokit({ auth: {
+      username,
+      password,
+      on2fa() { 
+        return Promise.resolve('')
+      }
+    }})
+
+    try {
+      await newProvider.users.getAuthenticated()
+      const res = await newProvider.oauthAuthorizations.createAuthorization({
+        note: 'iss-cli',
+        scopes: [`repo`]
+      })
+      const token = res.data.token
+      config.writeProvider(this.name, { token, user: username })
+      this.provider = new Octokit({ token })
+      return true
+    } catch(res) {
+      console.error(res)
+      return false
+    }
   }
 
   async find(options: FindOptions) {
-    const transformOptions = mapFindOptionsToIssueFindOptions(options)
-    const issues = await this.issues.listIssues(transformOptions)
+    const opts: IssuesListForRepoParams = buildIssueListOptions(this.user, this.repo, options)
+    const issues = await this.provider.issues.listForRepo(opts)
     return issues.data.map(normalize)
   }
 
   async get(number: number) {
     try {
-      const issue = await this.issues.getIssue(number)
+      const issue = await this.provider.issues.get({
+        owner: this.user,
+        repo: this.repo,
+        issue_number: number
+      })
       return normalize(issue.data)
     } catch(e) {
       const status = e.response.status
@@ -37,48 +64,61 @@ export default class Github implements Provider {
   }
 
   async create(options: CreateOptions) {
-    const transformOptions = mapCreateOptionsToIssueCreateOptions(options)
-    const issue = await this.issues.createIssue(transformOptions)
+    const opts: IssuesCreateParams = buildIssueCreateOptions(this.user, this.repo, options)
+    const issue = await this.provider.issues.create(opts)
     return normalize(issue.data)
   }
 
   async update(number: number, options: any) {
-    const issue = await this.issues.editIssue(number, options)
+    const opts: IssuesUpdateParams = buildIssueUpdateOptions(this.user, this.repo, number, options)
+    const issue = await this.provider.issues.update(opts)
     return normalize(issue.data)
   }
   // destroy(): Promise<{}>
 }
 
-function mapFindOptionsToIssueFindOptions(options: FindOptions): IssueFindOptions {
-  const issueFindOptions = Object.create(null)
+function buildIssueListOptions(user: string, repo: string, options: FindOptions): IssuesListForRepoParams {
+  const opts: IssuesListForRepoParams = Object.create(null)
+  opts.owner = user
+  opts.repo = repo
 
   if(options.state) {
-    issueFindOptions.state = 'all' === options.state ? 'all' : parseState(options.state)
+    opts.state = 'all' === options.state ? 'all' : parseState(options.state)
   } else if(options.labels) {
-    issueFindOptions.labels = transformLabels(options.labels)
+    opts.labels = transformLabels(options.labels)
   }
 
-  return issueFindOptions
+  return opts
 }
 
-function mapCreateOptionsToIssueCreateOptions(options: CreateOptions): IssueCreateOptions {
-  const issueCreateOptions = Object.create(null)
-  issueCreateOptions.title = options.title
+function buildIssueCreateOptions(user: string, repo: string, options: CreateOptions): IssuesCreateParams {
+  const opts: IssuesCreateParams = Object.create(null)
+  opts.owner = user
+  opts.repo = repo
+  opts.title = options.title
+  opts.labels = options.labels
+  
+  return opts
+}
 
-  if(options.labels) {
-    issueCreateOptions.labels = transformLabels(options.labels)
-  }
-
-  return issueCreateOptions
+function buildIssueUpdateOptions(user: string, repo: string, number: number, options: any): IssuesUpdateParams {
+  const opts: IssuesUpdateParams = Object.create(null)
+  opts.owner = user
+  opts.repo = repo
+  opts.issue_number = number
+  opts.title = options.title
+  opts.labels = options.labels
+  opts.state = options.state
+  
+  return opts
 }
 
 function transformLabels(labels: string[]) {
   return labels.join(',')
 }
 
-// function parseLabels(labels: string): Label[]
-
-function normalize(issue: GithubIssue): ProviderIssue {
+function normalize(issue: IssuesListForRepoResponseItem): ProviderIssue {
+  const closeAt = issue.closed_at
   return {
     id: issue.id,
     number: issue.number,
@@ -89,6 +129,6 @@ function normalize(issue: GithubIssue): ProviderIssue {
     labels: issue.labels,
     createAt: new Date(issue.created_at),
     updateAt: new Date(issue.updated_at),
-    closeAt: null === issue.closed_at ? null : new Date(issue.closed_at)
+    closeAt: null === closeAt ? null : new Date(closeAt)
   }
 }

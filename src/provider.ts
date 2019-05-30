@@ -1,4 +1,13 @@
-import { State } from './state'
+export const enum State { Open = 'open', Close = 'closed' }
+
+export function parseState(state: string): State {
+  switch(state) {
+    case State.Open: return State.Open
+    case State.Close: return State.Close
+    default: throw new Error(`Unknown state "${state}"`)
+  }
+}
+
 
 export type Label = {
   color: string,
@@ -33,8 +42,13 @@ export interface UpdateOptions {
 }
 
 export interface Provider {
+  auth(username: string, password: string): Promise<boolean>
   find(options?: FindOptions): Promise<Issue[]>
   get(number: number): Promise<Issue | null>
   update(number: number, options: UpdateOptions): Promise<Issue>
   create(options: CreateOptions): Promise<Issue>
+}
+
+export interface ProviderConstructor {
+  new(token: undefined | string, user: string, repo: string): Provider
 }
