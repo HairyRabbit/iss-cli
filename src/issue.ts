@@ -322,4 +322,4 @@ export default function main(args: string[]): void {
   command(args)
 }
 
-main(process.argv.slice(2))
+// main(process.argv.slice(2))
