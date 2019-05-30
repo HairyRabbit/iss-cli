@@ -18,7 +18,7 @@
     "url": "https://github.com/HairyRabbit/bug-cli/issues"
   },
   "bin": {
-    "iss": "./bin/issue"
+    "iss": "./bin/iss"
   },
   "homepage": "https://github.com/HairyRabbit/bug-cli#readme",
   "devDependencies": {
