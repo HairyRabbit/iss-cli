@@ -47,5 +47,9 @@
     "strip-ansi": "^5.2.0",
     "util-extra": "0.0.18",
     "yargs-parser": "^13.1.0"
+  },
+  "jest": {
+    "preset": "ts-jest",
+    "testEnvironment": "node"
   }
 }
