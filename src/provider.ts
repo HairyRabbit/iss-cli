@@ -8,7 +8,6 @@ export function parseState(state: string): State {
   }
 }
 
-
 export type Label = {
   color: string,
   name: string
@@ -42,7 +41,8 @@ export interface UpdateOptions {
 }
 
 export interface Provider {
-  auth(username: string, password: string): Promise<boolean>
+  login?(username: string, password: string): Promise<string>
+  signout?(): Promise<void>
   find(options?: FindOptions): Promise<Issue[]>
   get(number: number): Promise<Issue | null>
   update(number: number, options: UpdateOptions): Promise<Issue>

@@ -12,6 +12,16 @@ export function newline(): void {
   console.log('')
 }
 
+export function margin(...msgs: [any?, ...any[]]): void {
+  newline()
+  console.log.apply(console, msgs)
+  newline()
+}
+
+export function error(...msgs: [any?, ...any[]]): void {
+  return margin.apply(null, msgs)
+}
+
 export function metas(header: { [key: string]: string }, divLength: number = 8): void {
   hr(divLength)
   

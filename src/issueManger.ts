@@ -4,11 +4,11 @@ import ini from 'ini'
 import open from 'open'
 import { sync as findUp } from 'find-up'
 import unquote from 'util-extra/string/unquote'
-import prompts from 'prompts'
 import GitHub from './provider/github'
 import { Provider, Issue, FindOptions, CreateOptions, ProviderConstructor } from './provider'
 import { Optional, None, Some } from 'util-extra/container/optional'
 import config from './config'
+import { Result, Err, Ok } from 'util-extra/container/result'
 
 class IssueManager {
   private provider!: Provider
@@ -17,7 +17,7 @@ class IssueManager {
   }
 
   private init() {
-    const root = findUp(`.git`, { cwd: process.cwd(), type: 'directory' })
+    const root: undefined | string = findUp(`.git`, { cwd: process.cwd(), type: 'directory' })
     if(undefined === root) throw new Error(`Can't find ".git" directory`)
     const content: string = fs.readFileSync(path.resolve(root, 'config'), `utf-8`)
     const parsedContent: { [key: string]: any } = ini.parse(content)
@@ -36,7 +36,7 @@ class IssueManager {
     const useRemote = remote.origin || remote[remotes[0]]
 
     if(useRemote.match(`github.com`)) {
-      const githubConfig = config.readProviderConfig(`github`)
+      const githubConfig = config.readProviderConfig(GitHub.providerName)
       const ProviderConstructor: ProviderConstructor = GitHub
       const token: string | undefined = undefined
         || process.env.ISSCLI_GITHUB_TOKEN 
@@ -53,50 +53,57 @@ class IssueManager {
     }
   }
 
-  public async getToken() {
-    console.log(`Create access token from api`)
-    const res = await prompts([{
-      type: 'text',
-      name: 'username',
-      message: 'Username:'
-    },{
-      type: 'password',
-      name: 'password',
-      message: 'Password:'
-    }])
+  public async getToken(username: string, password: string): Promise<Result<string, Error>> {
+    if(undefined === this.provider.login) {
+      return Err(new Error(`Provider.login was not implement`))
+    }
     
-    return await this.provider.auth(res.username, res.password)
+    try {
+      const token: string = await this.provider.login(username, password)
+      return Ok(token)
+    } catch(e) {
+      return Err(e instanceof Error ? e : new Error(e))
+    }
+  }
+
+  public async deleteToken() {
+    return await this.provider.signout!()
   }
 
   public async listIssues(options: FindOptions) {
     return await this.provider.find(options)
   }
 
-  public async getIssue(number: number) {
-    return await this.provider.get(number)
+  public async getIssue(number: number): Promise<Optional<Issue>> {
+    const issue: Issue | null = await this.provider.get(number)
+    if(null === issue) return None
+    return Some(issue)
   }
 
   public async createIssue(options: CreateOptions) {
     return await this.provider.create(options)
   }
 
-  public async closeIssue(number: number) {
-    return await this.provider.update(number, { state: 'closed' })
+  public async toggleIssue(number: number, state: `open` | `closed`): Promise<Optional<Issue>> {
+    const issue: Issue | null = await this.provider.update(number, { state })
+    if(null === issue) return None
+    return Some(issue)
   }
 
-  public async openIssue(number: number) {
-    return await this.provider.update(number, { state: 'open' })
-  }
-
-  public async changeIssueTitle(number: number, title: string)  {
-    return await this.provider.update(number, { title })
+  public async changeIssueTitle(number: number, title: string): Promise<Optional<Issue>> {
+    const issue: Issue | null = await this.provider.update(number, { title })
+    if(null === issue) return None
+    return Some(issue)
   }
 
   public async openBrowserIssue(number: number): Promise<Optional<[Issue, (() => void)]>> {
-    const issue = await this.getIssue(number)
-    if(null === issue) return None
-    const fn = async () => await open(issue.url)
-    return Some([issue, fn])
+    try {
+      const issue = (await this.getIssue(number)).unwrap()
+      const fn = async () => await open(issue.url)
+      return Some([issue, fn])
+    } catch(e) {
+      return None
+    }
   }
 }
 

@@ -48,7 +48,7 @@
     "open": "^6.3.0",
     "prompts": "^2.1.0",
     "strip-ansi": "^5.2.0",
-    "util-extra": "0.0.18",
+    "util-extra": "0.0.19",
     "yargs-parser": "^13.1.0"
   },
   "jest": {

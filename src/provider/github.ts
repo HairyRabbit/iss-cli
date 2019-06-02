@@ -1,9 +1,9 @@
-import Octokit, { IssuesListForRepoResponseItem, IssuesListForRepoParams, IssuesCreateParams, IssuesUpdateParams } from '@octokit/rest'
+import Octokit, { IssuesListForRepoResponseItem, IssuesListForRepoParams, IssuesCreateParams, IssuesUpdateParams, HookError } from '@octokit/rest'
 import { Provider, Issue as ProviderIssue, FindOptions, CreateOptions, parseState } from '../provider'
 import config from '../config'
 
 export default class Github implements Provider {
-  public name: string = `github`
+  public static providerName: string = `GitHub`
   private provider: Octokit
 
   constructor(private token: undefined | string, private user: string, private repo: string) {
@@ -13,29 +13,49 @@ export default class Github implements Provider {
     this.provider = new Octokit({ auth: `token ${this.token}` })
   }
 
-  async auth(username: string, password: string) {
+  async login(username: string, password: string): Promise<string> {
+    
     const newProvider: Octokit = new Octokit({ auth: {
       username,
       password,
-      on2fa() { 
-        return Promise.resolve('')
-      }
+      on2fa() { return Promise.resolve('') }
     }})
 
     try {
-      await newProvider.users.getAuthenticated()
+      const auths = await newProvider.oauthAuthorizations.listAuthorizations()
+      const id: undefined | number = auths.data.find(auth => `iss-cli` === auth.note)!.id
+      if(undefined !== id) await newProvider.oauthAuthorizations.deleteAuthorization({ authorization_id: id })
+
       const res = await newProvider.oauthAuthorizations.createAuthorization({
-        note: 'iss-cli',
+        note: `iss-cli`,
+        note_url: `https://github.com/HairyRabbit/iss-cli`,
         scopes: [`repo`]
       })
-      const token = res.data.token
-      config.writeProvider(this.name, { token, user: username })
-      this.provider = new Octokit({ token })
-      return true
+
+      const token: string = res.data.token
+      this.setupToken(token)
+      return token
     } catch(res) {
-      console.error(res)
-      return false
+      const status: undefined | number = res.status
+      if(undefined !== status) {
+        if(401 === status)  {
+          throw new Error(`Bad credentials, invalid username or password`)
+        }
+      }
+
+      const errs: undefined | HookError['errors'] = res.errors
+      if(undefined !== errs) {
+        const msgs = errs.map(({ code }) => code)
+        throw new Error(msgs.join(`\n`))
+      }
+
+      throw new Error(res)
     }
+  }
+
+  private setupToken(token: string) {
+    config.writeProviderToken(Github.providerName, token)
+    this.provider = new Octokit({ token })
   }
 
   async find(options: FindOptions) {
@@ -113,7 +133,7 @@ function buildIssueUpdateOptions(user: string, repo: string, number: number, opt
   return opts
 }
 
-function transformLabels(labels: string[]) {
+function transformLabels(labels: string[]): string {
   return labels.join(',')
 }
 
