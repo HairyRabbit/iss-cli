@@ -4,14 +4,10 @@
 
 _A cli for Git repo issues_
 
+`npm i -g iss-cli`
+
 </div>
 
-
-## Installtion
-
-```sh
-npm i -g iss-cli
-```
 
 ## Usage
 
