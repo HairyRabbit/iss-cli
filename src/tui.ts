@@ -23,6 +23,11 @@ export function margin(...msgs: [any?, ...any[]]): void {
   newline()
 }
 
+export function marginBottom(...msgs: [any?, ...any[]]): void {
+  console.log.apply(console, msgs)
+  newline()
+}
+
 export function error(...msgs: [any?, ...any[]]): void {
   return margin.apply(null, msgs.map(msg => chalk.red(msg)) as [any?, ...any[]])
 }

@@ -11,20 +11,20 @@ import makeCli from '../command/main'
 
 
 export default makeCli(`bug`, {
-  _: makeCommand(false, showIssue),
-  ls: makeCommand(true, listIssue, {
+  _: makeCommand(`bug <number>`, `Show bug detail`, false, showIssue),
+  ls: makeCommand(`bug ls`, `List bugs`, true, listIssue, {
     preOptions: overrideListOptions as HandlerOptions['preOptions']
   }),
-  add: makeCommand(true, createIssue, {
+  add: makeCommand(`bug add <title>`, `Create new bug report`, true, createIssue, {
     preOptions: overrideCreateOptions as HandlerOptions['preOptions']
   }),
-  open: makeCommand(true, openIssue),
-  done: makeCommand(true, closeIssue),
-  see: makeCommand(true, browseIssue),
-  rename: makeCommand(true, renameIssue, {
+  open: makeCommand(`bug open <number>`, `Reopen bug`, true, openIssue),
+  fix: makeCommand(`bug close <number>`, `Mark bug was fixed`, true, closeIssue),
+  see: makeCommand(`bug see <number>`, `Visit issue link by browser`, true, browseIssue),
+  rename: makeCommand(`bug rename <number>`, `Update bug report title`, true, renameIssue, {
     preOptions: overrideRenameOptions as HandlerOptions['preOptions']
   }),
-  login: makeCommand(true, loginIssue)
+  login: makeCommand(`bug login`, `Login and create access token`, true, loginIssue)
 })
 
 

@@ -56,17 +56,23 @@ export interface HandlerOptions {
 }
 
 export interface Command {
+  command: string,
+  description: string,
   isSubCommand: boolean
   options?: Omit<HandlerOptions, 'name'>
   handler(args: string[], options?: HandlerOptions): void | Promise<void>
 }
 
 export function makeCommand(
-  isSubCommand: Command['isSubCommand'], 
+  command: string,
+  description: string,
+  isSubCommand: Command['isSubCommand'],
   handle: Command['handler'], 
   options: Command['options'] = {}
 ): Command {
   const cmd = Object.create(null)
+  cmd.command = command
+  cmd.description = description
   cmd.isSubCommand = isSubCommand
   cmd.handler = handle
   cmd.options = options

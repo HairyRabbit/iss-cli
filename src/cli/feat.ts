@@ -4,29 +4,28 @@ import { makeNotFeatureTitle } from '../error'
 import listIssue from '../command/list'
 import showIssue from '../command/show'
 import createIssue from '../command/create'
-import { openIssue, closeIssue } from '../command/toggle'
+import { closeIssue } from '../command/toggle'
 import browseIssue from '../command/browse'
 import renameIssue from '../command/rename'
 import loginIssue from '../command/login'
 import makeCli from '../command/main'
 
 export default makeCli(`feat`, {
-  _: makeCommand(false, showIssue, {
+  _: makeCommand(`feat <number>`, `Show issue detail`, false, showIssue, {
     postData: assertFeatureTitle as HandlerOptions['postData']
   }),
-  ls: makeCommand(true, listIssue, {
+  ls: makeCommand(`feat ls`, `List feature request`, true, listIssue, {
     preOptions: overrideListOptions as HandlerOptions['preOptions']
   }),
-  add: makeCommand(true, createIssue, {
+  add: makeCommand(`feat add <title>`, `Create new feature request`, true, createIssue, {
     preOptions: overrideCreateOptions as HandlerOptions['preOptions']
   }),
-  open: makeCommand(true, openIssue),
-  done: makeCommand(true, closeIssue),
-  see: makeCommand(true, browseIssue),
-  rename: makeCommand(true, renameIssue, {
+  done: makeCommand(`feat doen <number>`, `Mark feature request works done`, true, closeIssue),
+  see: makeCommand(`feat see <number>`, `Visit issue link by browser`, true, browseIssue),
+  rename: makeCommand(`feat rename <number>`, `Update feature title`, true, renameIssue, {
     preOptions: overrideRenameOptions as HandlerOptions['preOptions']
   }),
-  login: makeCommand(true, loginIssue)
+  login: makeCommand(`feat login`, `Login and create access token`, true, loginIssue)
 })
 
 const FEATURE_TITLE: string = `[Feature Request]`

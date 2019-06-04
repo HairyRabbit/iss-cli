@@ -1,6 +1,6 @@
 import chalk from "chalk"
 import toLocalString, { Type } from "util-extra/date/toLocalString"
-import { newline, metas, empty, markdown, table, error } from "./tui"
+import { newline, metas, empty, markdown, table, error, margin, marginBottom } from "./tui"
 import { Issue, State, Label } from "./provider"
 
 interface RenderIssueOptions {
@@ -11,10 +11,7 @@ export function renderIssue(issue: Issue, options: RenderIssueOptions = {}): voi
   const { metas: metasOptions } = options
   const { number, title, state, body, url, createAt, updateAt, labels } = issue
 
-  newline()
-
   renderHeader(number, title, state)
-  newline()
 
   if(true === metasOptions) {
     metas({
@@ -28,18 +25,18 @@ export function renderIssue(issue: Issue, options: RenderIssueOptions = {}): voi
 
   if(labels.length) {
     renderLabels(labels)
-    newline()
   }
 
-  '' === body.trim() 
-    ? empty(`description`) 
-    : markdown(body.trim())
-
+  if('' === body.trim()) {
+    empty(`description`)
+  } else {
+    markdown(body.trim())
+  }
   newline()
 
   function renderHeader(number: number, title: string, state: State): void {
     const stateStr: string = styleState(state)
-    console.log([
+    margin([
       stateStr,
       `#${number.toString()}`,
       chalk.bold(title)
@@ -55,7 +52,7 @@ export function renderIssue(issue: Issue, options: RenderIssueOptions = {}): voi
   }
 
   function renderLabels(labels: Label[]): void {
-    console.log(labels.map(styleLabel).join(' '))
+    marginBottom(labels.map(styleLabel).join(' '))
 
     function styleLabel({ color, name }: Label): string {
       return chalk.bold.bgHex(color)(` ${name} `)
@@ -122,3 +119,10 @@ https://github.com/HairyRabbit/iss-cli/issues/new/choose
 // export function renderHelper(content: string, author) {
 //   console.log(content + '\n\n' + renderLicenseAndCopyright())
 // }
+
+
+export function renderCommands(commands: [string, string][]) {
+  return commands.map(([ command, description ]) => {
+    return command.padEnd(24) + `- ` + description
+  }).join('\n')
+}

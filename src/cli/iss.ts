@@ -9,12 +9,12 @@ import loginIssue from '../command/login'
 import makeCli from '../command/main'
 
 export default makeCli(`iss`, {
-  _: makeCommand(false, showIssue),
-  ls: makeCommand(true, listIssue),
-  add: makeCommand(true, createIssue),
-  open: makeCommand(true, openIssue),
-  close: makeCommand(true, closeIssue),
-  see: makeCommand(true, browseIssue),
-  rename: makeCommand(true, renameIssue),
-  login: makeCommand(true, loginIssue)
+  _: makeCommand(`iss <number>`, `Show issue detail`, false, showIssue),
+  ls: makeCommand(`iss ls`, `List issues`, true, listIssue),
+  add: makeCommand(`iss add <title>`, `Create new issue`, true, createIssue),
+  open: makeCommand(`iss open <number>`, `Open issue`, true, openIssue),
+  close: makeCommand(`iss close <number>`, `Close issue`, true, closeIssue),
+  see: makeCommand(`iss see <number>`, `Visit issue link by browser`, true, browseIssue),
+  rename: makeCommand(`iss rename <number>`, `Update issue title`, true, renameIssue),
+  login: makeCommand(`iss login`, `Login and create access token`, true, loginIssue)
 })

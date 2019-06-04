@@ -12,6 +12,7 @@ export default async function showIssue(args: string[], options: HandlerOptions)
       metas: false
     }
   }))
+  
   if(opts.help) return printHelp(name)
 
   try {
