@@ -2,7 +2,7 @@
 
 # iss-cli
 
-_A cli for Git repo issues_
+_Git repo issue manager_
 
 `npm i -g iss-cli`
 

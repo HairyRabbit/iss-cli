@@ -1,7 +1,7 @@
 {
   "name": "iss-cli",
   "version": "0.0.4",
-  "description": "A cli for bug report",
+  "description": "Git repo issue manager",
   "scripts": {
     "start": "tsc -w",
     "test": "jest"
