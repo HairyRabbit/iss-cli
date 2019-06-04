@@ -1,6 +1,6 @@
 {
   "name": "iss-cli",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "Git repo issue manager",
   "scripts": {
     "start": "tsc -w",
