@@ -83,3 +83,35 @@ export function renderIssueList(issues: Issue[], _options: any): void {
 export function renderError(e: unknown): void {
   error(e instanceof Error ? e.message : e)
 }
+
+type AuthorObject = {
+  name?: string,
+  email?: string,
+  url?: string
+}
+
+export function renderLicenseAndCopyright(author: string | AuthorObject, license: string = `MIT`): string {
+  const authorString: string = `string` === typeof author 
+    ? author 
+    : [author.name, author.email, author.url].join(' ')
+  
+  const copyright: string = authorString === '' ? '' : `Copyright © ${authorString}`
+  
+  return `\
+License:
+
+${license.toUpperCase()} ${copyright}`
+}
+
+export function renderFooter(): string {
+return `\
+Thanks for use. Any ${chalk.bold(`bug`)} or ${chalk.bold(`feature request`)} please report on:
+
+https://github.com/HairyRabbit/iss-cli/issues/new/choose
+
+❤`
+}
+
+// export function renderHelper(content: string, author) {
+//   console.log(content + '\n\n' + renderLicenseAndCopyright())
+// }

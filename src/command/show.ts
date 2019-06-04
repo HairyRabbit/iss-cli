@@ -1,17 +1,16 @@
 import parseArgs, { Arguments } from 'yargs-parser'
 import issueManager from '../issueManger'
 import { error } from "../tui"
-import { parsePositionNumber, makeHelpOptions } from "../argv"
+import { parsePositionNumber, makeHelpOptions, HandlerOptions } from "../argv"
 import { renderIssue } from "../render"
-import { CLI_NAME } from './main'
 
-export default async function showIssue(args: string[]): Promise<void> {
-  const options: Arguments = parseArgs(args, makeHelpOptions())
-
-  if(options.help) return printHelp(CLI_NAME)
+export default async function showIssue(args: string[], options: HandlerOptions): Promise<void> {
+  const { name } = options
+  const opts: Arguments = parseArgs(args, makeHelpOptions())
+  if(opts.help) return printHelp(name)
 
   try {
-    const number = parsePositionNumber(options).unwrap()
+    const number = parsePositionNumber(opts, 0, `<number>`).unwrap()
     const issue = await issueManager.getIssue(number)
     renderIssue((await issue).unwrap())
   } catch(e) {

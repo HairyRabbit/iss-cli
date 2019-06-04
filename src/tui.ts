@@ -1,8 +1,13 @@
+import os from 'os'
+import fs from 'fs'
+import path from 'path'
+import { spawn } from 'child_process'
 import { startCase, identity as id, padEnd, split, truncate } from 'lodash'
 import marked from 'marked'
 import TerminalRenderer from 'marked-terminal'
 import stripAnsi from 'strip-ansi'
 import chalk from 'chalk'
+import randomString from 'util-extra/string/randomString'
 
 // const commonOptions = {
 //   writer: console.log
@@ -19,7 +24,7 @@ export function margin(...msgs: [any?, ...any[]]): void {
 }
 
 export function error(...msgs: [any?, ...any[]]): void {
-  return margin.apply(null, msgs)
+  return margin.apply(null, msgs.map(msg => chalk.red(msg)) as [any?, ...any[]])
 }
 
 export function metas(header: { [key: string]: string }, divLength: number = 8): void {
@@ -247,4 +252,27 @@ export function markdown(content: string): void {
   })
 
   console.log(marked(content))
+}
+
+export function editor(template: string = ``, editor?: string): Promise<string> {
+  const tempPath: string = path.join(os.tmpdir(), `iss-cli-tmp-${randomString()}.md`)
+  fs.writeFileSync(tempPath, template, `utf-8`)
+  const defaultEditor: string = /^win/.test(process.platform) ? 'notepad' : 'vim'
+  const bin: string = editor
+    || process.env.ISSCLI_EDITOR
+    || process.env.VISUAL
+    || process.env.EDITOR
+    || defaultEditor
+
+  return new Promise((res, rej) => {
+    const ps = spawn(bin, [tempPath], { stdio: 'inherit' })
+    ps.on(`exit`, (code: number) => {
+      const content: string = fs.readFileSync(tempPath, `utf-8`)
+      fs.unlinkSync(tempPath)
+      switch(code) {
+        case 0: return res(content)
+        default: return rej()
+      }
+    })
+  })
 }

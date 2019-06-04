@@ -8,7 +8,7 @@ export default async function browseIssue(args: string[]): Promise<void> {
   const options: Arguments = parseArgs(args, makeHelpOptions())
 
   try {
-    const number = parsePositionNumber(options).unwrap()
+    const number = parsePositionNumber(options, 0, `<number>`).unwrap()
     const [ issue, proc ] = (await issueManager.openBrowserIssue(number)).unwrap()
     margin(`Open browser and visite "${issue.url}"`)
     proc()

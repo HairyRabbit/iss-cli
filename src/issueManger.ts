@@ -3,12 +3,12 @@ import path from 'path'
 import ini from 'ini'
 import open from 'open'
 import { sync as findUp } from 'find-up'
+import { Optional, None, Some } from 'util-extra/container/optional'
+import { Result, Err, Ok } from 'util-extra/container/result'
 import unquote from 'util-extra/string/unquote'
 import GitHub from './provider/github'
-import { Provider, Issue, FindOptions, CreateOptions, ProviderConstructor } from './provider'
-import { Optional, None, Some } from 'util-extra/container/optional'
+import { Provider, Issue, FindOptions, IssueOptions, ProviderConstructor } from './provider'
 import config from './config'
-import { Result, Err, Ok } from 'util-extra/container/result'
 
 class IssueManager {
   private provider!: Provider
@@ -80,7 +80,7 @@ class IssueManager {
     return Some(issue)
   }
 
-  public async createIssue(options: CreateOptions) {
+  public async createIssue(options: IssueOptions) {
     return await this.provider.create(options)
   }
 

@@ -2,7 +2,6 @@
   "name": "iss-cli",
   "version": "0.0.4",
   "description": "A cli for bug report",
-  "main": "index.js",
   "scripts": {
     "start": "tsc -w",
     "test": "jest"
@@ -11,14 +10,18 @@
     "type": "git",
     "url": "git+https://github.com/HairyRabbit/bug-cli.git"
   },
-  "keywords": [],
-  "author": "",
+  "keywords": [
+    "cli"
+  ],
+  "author": "HairyRabbit <yfhj1990@hotmail.com>",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/HairyRabbit/bug-cli/issues"
   },
   "bin": {
-    "iss": "./bin/iss"
+    "iss": "./bin/iss",
+    "feat": "./bin/feat",
+    "bug": "./bin/bug"
   },
   "homepage": "https://github.com/HairyRabbit/bug-cli#readme",
   "devDependencies": {

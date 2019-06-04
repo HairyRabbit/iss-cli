@@ -1,5 +1,5 @@
-import Octokit, { IssuesListForRepoResponseItem, IssuesListForRepoParams, IssuesCreateParams, IssuesUpdateParams, HookError } from '@octokit/rest'
-import { Provider, Issue as ProviderIssue, FindOptions, CreateOptions, parseState } from '../provider'
+import Octokit, { IssuesListForRepoResponseItem, IssuesListForRepoParams, IssuesCreateParams, IssuesUpdateParams, HookError, SearchIssuesParams } from '@octokit/rest'
+import { Provider, Issue as ProviderIssue, FindOptions, IssueOptions, parseState } from '../provider'
 import config from '../config'
 
 export default class Github implements Provider {
@@ -59,9 +59,15 @@ export default class Github implements Provider {
   }
 
   async find(options: FindOptions) {
-    const opts: IssuesListForRepoParams = buildIssueListOptions(this.user, this.repo, options)
-    const issues = await this.provider.issues.listForRepo(opts)
-    return issues.data.map(normalize)
+    if(!options.search) {
+      const opts: IssuesListForRepoParams = buildIssueListOptions(this.user, this.repo, options)
+      const issues = await this.provider.issues.listForRepo(opts)
+      return issues.data.map(normalize)
+    } else {
+      const opts: SearchIssuesParams = buildIssueSearchOptions(this.user, this.repo, options)
+      const issues = await this.provider.search.issuesAndPullRequests(opts)
+      return issues.data.items.map(normalize)
+    }
   }
 
   async get(number: number) {
@@ -83,7 +89,7 @@ export default class Github implements Provider {
     }
   }
 
-  async create(options: CreateOptions) {
+  async create(options: IssueOptions) {
     const opts: IssuesCreateParams = buildIssueCreateOptions(this.user, this.repo, options)
     const issue = await this.provider.issues.create(opts)
     return normalize(issue.data)
@@ -111,11 +117,34 @@ function buildIssueListOptions(user: string, repo: string, options: FindOptions)
   return opts
 }
 
-function buildIssueCreateOptions(user: string, repo: string, options: CreateOptions): IssuesCreateParams {
+function buildIssueSearchOptions(user: string, repo: string, options: FindOptions): SearchIssuesParams {
+  const query: string[] = []
+
+  query.push(`is:issue`)  
+  query.push(`repo:${user}/${repo}`)
+  
+  if(options.state && `all` !== options.state) {
+    query.push(`state:${parseState(options.state)}`)
+  } 
+  
+  if(options.labels) {
+    options.labels.forEach(label => {
+      query.push(`label:${label}`)
+    })
+  }
+
+  query.push(`${options.search} in:title`)
+
+  return {
+    q: query.join(' ')
+  }
+}
+
+function buildIssueCreateOptions(user: string, repo: string, options: IssueOptions): IssuesCreateParams {
   const opts: IssuesCreateParams = Object.create(null)
   opts.owner = user
   opts.repo = repo
-  opts.title = options.title
+  opts.title = options.title || ''
   opts.labels = options.labels
   
   return opts

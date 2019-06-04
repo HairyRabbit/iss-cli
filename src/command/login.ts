@@ -2,13 +2,14 @@ import parseArgs, { Arguments } from 'yargs-parser'
 import prompts from 'prompts'
 import chalk from 'chalk'
 import issueManager from '../issueManger'
-import { makeHelpOptions } from "../argv"
+import { makeHelpOptions, HandlerOptions } from "../argv"
 import { renderError } from "../render"
 import { margin } from '../tui'
 
-export default async function loginIssue(args: string[]): Promise<void> {
-  const options: Arguments = parseArgs(args, makeHelpOptions())
-  ;;;;/**@tood */options;;;;
+export default async function loginIssue(args: string[], options: HandlerOptions): Promise<void> {
+  const { name } = options
+  const opts: Arguments = parseArgs(args, makeHelpOptions())
+  if(opts.help) return printHelp(name)
 
   margin(`Login and create private access token:`)
 
@@ -42,4 +43,14 @@ export default async function loginIssue(args: string[]): Promise<void> {
   } catch(e) {
     renderError(e)
   }
+}
+
+function printHelp(name: string): void {
+  console.log(`
+Usage: ${name} login [...options]
+
+Options:
+
+--help, -h              - Show helper
+`)
 }
