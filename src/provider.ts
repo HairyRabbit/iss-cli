@@ -26,7 +26,7 @@ export interface Issue {
   closeAt: null | Date
 }
 
-export interface FindOptions {
+export interface ListIssueOptions {
   state?: State | 'all'
   search?: string
   labels?: string[]
@@ -46,7 +46,7 @@ export interface OptionsOverrider<T> {
 export interface Provider {
   login?(username: string, password: string): Promise<string>
   signout?(): Promise<void>
-  find(options?: FindOptions): Promise<Issue[]>
+  find(options?: ListIssueOptions): Promise<Issue[]>
   get(number: number): Promise<Issue | null>
   update(number: number, options: IssueOptions): Promise<Issue>
   create(options: IssueOptions): Promise<Issue>

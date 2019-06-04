@@ -7,7 +7,7 @@ import { Optional, None, Some } from 'util-extra/container/optional'
 import { Result, Err, Ok } from 'util-extra/container/result'
 import unquote from 'util-extra/string/unquote'
 import GitHub from './provider/github'
-import { Provider, Issue, FindOptions, IssueOptions, ProviderConstructor } from './provider'
+import { Provider, Issue, IssueOptions, ProviderConstructor, ListIssueOptions } from './provider'
 import config from './config'
 
 class IssueManager {
@@ -70,7 +70,7 @@ class IssueManager {
     return await this.provider.signout!()
   }
 
-  public async listIssues(options: FindOptions) {
+  public async listIssues(options: ListIssueOptions) {
     return await this.provider.find(options)
   }
 

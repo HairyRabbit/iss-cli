@@ -1,5 +1,5 @@
 import { makeCommand, HandlerOptions } from '../argv'
-import { IssueOptions } from '../provider'
+import { IssueOptions, ListIssueOptions } from '../provider'
 import listIssue from '../command/list'
 import showIssue from '../command/show'
 import createIssue from '../command/create'
@@ -11,8 +11,10 @@ import makeCli from '../command/main'
 
 
 export default makeCli(`bug`, {
-  ls: makeCommand(true, listIssue),
-  cat: makeCommand(false, showIssue),
+  _: makeCommand(false, showIssue),
+  ls: makeCommand(true, listIssue, {
+    preOptions: overrideListOptions as HandlerOptions['preOptions']
+  }),
   add: makeCommand(true, createIssue, {
     preOptions: overrideCreateOptions as HandlerOptions['preOptions']
   }),
@@ -25,10 +27,18 @@ export default makeCli(`bug`, {
   login: makeCommand(true, loginIssue)
 })
 
+
+function overrideListOptions(options: ListIssueOptions): ListIssueOptions {
+  return {
+    ...options,
+    search: `[Bug Report]`
+  }
+}
+
 function overrideCreateOptions(options: IssueOptions): IssueOptions {
   return {
     ...options,
-    title: `[Bug] ${options.title}`,
+    title: `[Bug Report] ${options.title}`,
     labels: [
       ...(options.labels || []),
       `bug`
@@ -37,5 +47,5 @@ function overrideCreateOptions(options: IssueOptions): IssueOptions {
 }
 
 function overrideRenameOptions(title: string): string {
-  return `[Bug] ${title}`
+  return `[Bug Report] ${title}`
 }

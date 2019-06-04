@@ -21,7 +21,7 @@ export default function makeCli(name: string, command: { [key: string]: Command 
     else if(0 === cmds.length) return printHelper(name, pkg)
 
     try {
-      const cmd = command[cmds[0]]
+      const cmd = command[cmds[0]] || command._
       if(cmd.isSubCommand) args.shift()
       cmd.handler(args, { ...cmd.options, name })
     } catch(e) {

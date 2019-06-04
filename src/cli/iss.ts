@@ -9,8 +9,8 @@ import loginIssue from '../command/login'
 import makeCli from '../command/main'
 
 export default makeCli(`iss`, {
+  _: makeCommand(false, showIssue),
   ls: makeCommand(true, listIssue),
-  cat: makeCommand(false, showIssue),
   add: makeCommand(true, createIssue),
   open: makeCommand(true, openIssue),
   close: makeCommand(true, closeIssue),

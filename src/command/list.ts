@@ -1,7 +1,7 @@
 import parseArgs, { Arguments } from 'yargs-parser'
 import { identity as id } from 'lodash'
 import issueManager from '../issueManger'
-import { Issue, State } from '../provider'
+import { Issue, State, ListIssueOptions } from '../provider'
 import { renderIssueList, renderError } from '../render'
 import { makeHelpOptions, parsePositionString, HandlerOptions } from '../argv'
 
@@ -26,11 +26,12 @@ export default async function listIssue(args: string[], options: HandlerOptions)
   try {
     const search = parsePositionString(opts, 0, `[...search]`).unwrapOr(undefined)
 
-    const issues: Issue[] = await issueManager.listIssues(preOptions({
+    const listIssueOptions: ListIssueOptions = preOptions({
       search,
       state: transformState(opts.closed, opts.all),
       labels: opts.label
-    }))
+    })
+    const issues: Issue[] = await issueManager.listIssues(listIssueOptions)
   
     renderIssueList(issues, {
       verbose: opts.verbose

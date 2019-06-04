@@ -1,5 +1,5 @@
 import Octokit, { IssuesListForRepoResponseItem, IssuesListForRepoParams, IssuesCreateParams, IssuesUpdateParams, HookError, SearchIssuesParams } from '@octokit/rest'
-import { Provider, Issue as ProviderIssue, FindOptions, IssueOptions, parseState } from '../provider'
+import { Provider, Issue as ProviderIssue, IssueOptions, parseState, ListIssueOptions } from '../provider'
 import config from '../config'
 
 export default class Github implements Provider {
@@ -58,7 +58,7 @@ export default class Github implements Provider {
     this.provider = new Octokit({ token })
   }
 
-  async find(options: FindOptions) {
+  async find(options: ListIssueOptions) {
     if(!options.search) {
       const opts: IssuesListForRepoParams = buildIssueListOptions(this.user, this.repo, options)
       const issues = await this.provider.issues.listForRepo(opts)
@@ -103,7 +103,7 @@ export default class Github implements Provider {
   // destroy(): Promise<{}>
 }
 
-function buildIssueListOptions(user: string, repo: string, options: FindOptions): IssuesListForRepoParams {
+function buildIssueListOptions(user: string, repo: string, options: ListIssueOptions): IssuesListForRepoParams {
   const opts: IssuesListForRepoParams = Object.create(null)
   opts.owner = user
   opts.repo = repo
@@ -117,7 +117,7 @@ function buildIssueListOptions(user: string, repo: string, options: FindOptions)
   return opts
 }
 
-function buildIssueSearchOptions(user: string, repo: string, options: FindOptions): SearchIssuesParams {
+function buildIssueSearchOptions(user: string, repo: string, options: ListIssueOptions): SearchIssuesParams {
   const query: string[] = []
 
   query.push(`is:issue`)  
