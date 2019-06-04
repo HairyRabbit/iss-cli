@@ -3,7 +3,12 @@ import toLocalString, { Type } from "util-extra/date/toLocalString"
 import { newline, metas, empty, markdown, table, error } from "./tui"
 import { Issue, State, Label } from "./provider"
 
-export function renderIssue(issue: Issue): void {
+interface RenderIssueOptions {
+  metas?: boolean
+}
+
+export function renderIssue(issue: Issue, options: RenderIssueOptions = {}): void {
+  const { metas: metasOptions } = options
   const { number, title, state, body, url, createAt, updateAt, labels } = issue
 
   newline()
@@ -11,13 +16,15 @@ export function renderIssue(issue: Issue): void {
   renderHeader(number, title, state)
   newline()
 
-  metas({
-    number: `#` + number.toString(),
-    link: url,
-    createAt: toLocalString(createAt, Type.DateTime),
-    updateAt: toLocalString(updateAt, Type.DateTime)
-  })
-  newline()
+  if(true === metasOptions) {
+    metas({
+      number: `#` + number.toString(),
+      link: url,
+      createAt: toLocalString(createAt, Type.DateTime),
+      updateAt: toLocalString(updateAt, Type.DateTime)
+    })
+    newline()
+  }
 
   if(labels.length) {
     renderLabels(labels)
