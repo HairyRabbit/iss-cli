@@ -16,7 +16,7 @@ export function parsePositionNumber(options: Arguments, position: number = 0, na
   const ret = parseInt(number)
   
   if(isNaN(ret)) {
-    return Err(new TypeError(`Invaild number "${ret}"`))
+    return Err(new TypeError(`Invaild number "${number}"`))
   }
 
   return Ok(ret)
@@ -77,4 +77,10 @@ export function makeCommand(
   cmd.handler = handle
   cmd.options = options
   return cmd
+}
+
+export function hasNoOptions(args: Arguments): boolean {
+  return Object.keys(args).filter(key => {
+    return ![`_`, `version`, `v`].includes(key)
+  }).length === 0
 }

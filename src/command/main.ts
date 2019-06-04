@@ -1,17 +1,15 @@
 import parseArgs, { Arguments } from 'yargs-parser'
 import { renderError, renderLicenseAndCopyright, renderFooter, renderCommands } from '../render'
-import { Command } from '../argv'
+import { Command, hasNoOptions } from '../argv'
 
 export default function makeCli(name: string, command: { [key: string]: Command }) {
   return (args: string[], pkg: { [key: string]: any }): void => {
     const options: Arguments = parseArgs(args, {
-      boolean: [ 'help', 'version' ],
+      boolean: [ 'version' ],
       alias: { 
-        help: 'h',
         version: 'v'
       },
       default: {
-        help: false,
         version: false
       }
     })
@@ -19,14 +17,13 @@ export default function makeCli(name: string, command: { [key: string]: Command 
     const cmdsDesc: [string, string][] = transformToCommandsRender(command)
     const cmds: string[] = options._
     if(options.version) return printVersion(pkg.version)
-    else if(0 === cmds.length) return printHelper(name, pkg, cmdsDesc)
+    else if(0 === cmds.length && hasNoOptions(options)) return printHelper(name, pkg, cmdsDesc)
 
     try {
       const cmd = command[cmds[0]] || command._
       if(cmd.isSubCommand) args.shift()
       cmd.handler(args, { ...cmd.options, name })
     } catch(e) {
-      printHelper(name, pkg, cmdsDesc)
       renderError(e)
     }
   }
@@ -57,7 +54,6 @@ ${renderCommands(cmds)}
 
 Options:
 
---help, -h              - Show helper
 --version, -v           - Print CLI version
 
 Providers:
