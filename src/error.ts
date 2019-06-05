@@ -12,3 +12,9 @@ This issue not a ${chalk.bold(`feature request`)}, try to run:
 
 get issue details`)
 }
+
+export function makeTitleRequiredError(command: string): Error {
+  return new Error(`\
+${chalk.bold(command)} title was required
+`)
+}

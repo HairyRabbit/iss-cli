@@ -261,22 +261,27 @@ export function markdown(content: string): void {
 
 export function editor(template: string = ``, editor?: string): Promise<string> {
   const tempPath: string = path.join(os.tmpdir(), `iss-cli-tmp-${randomString()}.md`)
+  console.log(tempPath, template)
   fs.writeFileSync(tempPath, template, `utf-8`)
   const defaultEditor: string = /^win/.test(process.platform) ? 'notepad' : 'vim'
-  const bin: string = editor
+  const cmd: string | string[] = editor
     || process.env.ISSCLI_EDITOR
     || process.env.VISUAL
     || process.env.EDITOR
     || defaultEditor
 
+  const cmdArr: string[] = `string` === typeof cmd ? cmd.split(` `) : cmd
+  const bin: string | undefined = cmdArr.shift()
+  if(undefined === bin) throw new Error(`Unknown editor bin`)
+
   return new Promise((res, rej) => {
-    const ps = spawn(bin, [tempPath], { stdio: 'inherit' })
+    const ps = spawn(bin, [...cmdArr, tempPath], { stdio: ['inherit', 'inherit', 'inherit'], shell: true })
     ps.on(`exit`, (code: number) => {
       const content: string = fs.readFileSync(tempPath, `utf-8`)
       fs.unlinkSync(tempPath)
       switch(code) {
         case 0: return res(content)
-        default: return rej()
+        default: return rej(code)
       }
     })
   })

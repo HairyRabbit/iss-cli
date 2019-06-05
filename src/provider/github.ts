@@ -145,7 +145,9 @@ function buildIssueCreateOptions(user: string, repo: string, options: IssueOptio
   opts.owner = user
   opts.repo = repo
   opts.title = options.title || ''
-  opts.labels = options.labels
+  
+  if(options.labels) opts.labels = options.labels
+  if(options.body) opts.body = options.body
   
   return opts
 }

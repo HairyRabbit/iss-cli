@@ -36,6 +36,7 @@ export function parsePositionString(options: Arguments, startPosition: number = 
 
 export function makeHelpOptions(options: Options = {}): Options {
   return {
+    ...options,
     boolean: [`help`, ...(options.boolean || [])],
     alias: { 
       help: 'h',
@@ -63,12 +64,12 @@ export interface Command {
   handler(args: string[], options?: HandlerOptions): void | Promise<void>
 }
 
-export function makeCommand(
+export function makeCommand<T extends Omit<HandlerOptions, 'name'>>(
   command: string,
   description: string,
   isSubCommand: Command['isSubCommand'],
   handle: Command['handler'], 
-  options: Command['options'] = {}
+  options?: T
 ): Command {
   const cmd = Object.create(null)
   cmd.command = command
