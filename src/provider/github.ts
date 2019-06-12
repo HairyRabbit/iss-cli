@@ -1,6 +1,8 @@
 import Octokit, { IssuesListForRepoResponseItem, IssuesListForRepoParams, IssuesCreateParams, IssuesUpdateParams, HookError, SearchIssuesParams } from '@octokit/rest'
 import { Provider, Issue as ProviderIssue, IssueOptions, parseState, ListIssueOptions } from '../provider'
 import config from '../config'
+import { makeAuthenticationError } from '../error'
+import { identity as id } from 'lodash'
 
 export default class Github implements Provider {
   public static providerName: string = `GitHub`
@@ -61,12 +63,20 @@ export default class Github implements Provider {
   async find(options: ListIssueOptions) {
     if(!options.search) {
       const opts: IssuesListForRepoParams = buildIssueListOptions(this.user, this.repo, options)
-      const issues = await this.provider.issues.listForRepo(opts)
-      return issues.data.map(normalize)
+      try {
+        const issues = await this.provider.issues.listForRepo(opts)
+        return issues.data.map(normalize)
+      } catch(e) {
+        throw transformError(e)
+      }
     } else {
       const opts: SearchIssuesParams = buildIssueSearchOptions(this.user, this.repo, options)
-      const issues = await this.provider.search.issuesAndPullRequests(opts)
-      return issues.data.items.map(normalize)
+      try {
+        const issues = await this.provider.search.issuesAndPullRequests(opts)
+        return issues.data.items.map(normalize)
+      } catch(e) {
+        throw transformError(e)
+      }
     }
   }
 
@@ -79,28 +89,31 @@ export default class Github implements Provider {
       })
       return normalize(issue.data)
     } catch(e) {
-      const status = e.response.status
-      
-      if(404 === status) {
-        return null
-      } else {
-        throw new Error(e.response.statusText)
-      }
+      throw transformError(e)
     }
   }
 
   async create(options: IssueOptions) {
     const opts: IssuesCreateParams = buildIssueCreateOptions(this.user, this.repo, options)
-    const issue = await this.provider.issues.create(opts)
-    return normalize(issue.data)
+
+    try {
+      const issue = await this.provider.issues.create(opts)
+      return normalize(issue.data)
+    } catch(e) {
+      throw transformError(e)
+    }
   }
 
   async update(number: number, options: any) {
     const opts: IssuesUpdateParams = buildIssueUpdateOptions(this.user, this.repo, number, options)
-    const issue = await this.provider.issues.update(opts)
-    return normalize(issue.data)
+    
+    try {
+      const issue = await this.provider.issues.update(opts)
+      return normalize(issue.data)
+    } catch(e) {
+      throw transformError(e)
+    }
   }
-  // destroy(): Promise<{}>
 }
 
 function buildIssueListOptions(user: string, repo: string, options: ListIssueOptions): IssuesListForRepoParams {
@@ -181,5 +194,29 @@ function normalize(issue: IssuesListForRepoResponseItem): ProviderIssue {
     createAt: new Date(issue.created_at),
     updateAt: new Date(issue.updated_at),
     closeAt: null === closeAt ? null : new Date(closeAt)
+  }
+}
+
+type RequestError = Error & Omit<Octokit.Response<never>, 'data'>
+
+type TransformErrorOptions = {
+  token: string,
+  tokenFrom: string
+} & {
+  number: number
+}
+
+function transformError({ token, tokenFrom, number }: TransformErrorOptions, custom: (err: RequestError) => Error = id) {
+  return (err: RequestError): Error => {
+    switch(err.status) {
+      case 500:
+        if(!err.message.match(/ETIMEDOUT/)) return err
+        return new Error(`Connect timeout`)
+      case 401:
+        return makeAuthenticationError(token, tokenFrom)
+      case 404:
+        return new Error(`Issue #${number.toString()} was not found`)
+      default: return custom(err)
+    }
   }
 }

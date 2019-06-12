@@ -43,7 +43,6 @@ export default async function createIssue(args: string[], options: CreateOptions
       }
     }
 
-    console.log(issueOptions, preOptions(issueOptions))
     const issue: Issue = await issueManager.createIssue(preOptions(issueOptions))
     renderIssue(issue)
   } catch(e) {

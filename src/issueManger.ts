@@ -10,6 +10,11 @@ import GitHub from './provider/github'
 import { Provider, Issue, IssueOptions, ProviderConstructor, ListIssueOptions } from './provider'
 import config from './config'
 
+interface HttpError {
+  number: number,
+  error: Error
+}
+
 class IssueManager {
   private provider!: Provider
   constructor() {
@@ -84,10 +89,23 @@ class IssueManager {
     return await this.provider.create(options)
   }
 
-  public async toggleIssue(number: number, state: `open` | `closed`): Promise<Optional<Issue>> {
-    const issue: Issue | null = await this.provider.update(number, { state })
-    if(null === issue) return None
-    return Some(issue)
+  public async toggleIssue(numbers: number[], state: `open` | `closed`): Promise<Optional<[Issue[], HttpError[]]>> {
+    const dones: Issue[] = []
+    const fails: HttpError[] = []
+
+    for await (const number of numbers) {
+      try {
+        const issue = await this.provider.update(number, { state })
+        dones.push(issue)
+      } catch(e) {
+        fails.push({
+          number: number,
+          error: e
+        })
+      }
+    }
+    
+    return Some([ dones, fails ])
   }
 
   public async changeIssueTitle(number: number, title: string): Promise<Optional<Issue>> {

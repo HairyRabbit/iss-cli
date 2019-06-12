@@ -85,6 +85,7 @@ export function renderIssueList(issues: Issue[], _options: any): void {
 }
 
 export function renderError(e: unknown): void {
+  console.log(e)
   error(e instanceof Error ? e.message : e)
 }
 
@@ -125,4 +126,16 @@ export function renderCommands(commands: [string, string][]) {
   return commands.map(([ command, description ]) => {
     return command.padEnd(24) + `- ` + description
   }).join('\n')
+}
+
+function renderNumber(number: number): string {
+  return '#' + number.toString()
+}
+
+export function renderNumbers(numbers: number[]): string {
+  return numbers.map(number => renderNumber(number)).join(',')
+}
+
+export function renderIssuesNumber(issues: Issue[]) {
+  return renderNumbers(issues.map(({ number }) => number))
 }

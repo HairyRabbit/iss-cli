@@ -22,6 +22,30 @@ export function parsePositionNumber(options: Arguments, position: number = 0, na
   return Ok(ret)
 }
 
+export function parsePositionNumbers(options: Arguments, position: number = 0, name: string): Result<number[], Error> {
+  const numbers: string[] = options._.slice(position)
+
+  if(0 === numbers.length) {
+    return Err(makePositionArgumentRequiredError(name, position, `numbers`))
+  }
+
+  try {
+    const ret: number[] = numbers.map((numberString: string): number[] => {
+      if(`number` === typeof numberString) return numberString
+      
+      return numberString.split(',').filter(Boolean).map(s => {
+        const number = parseInt(s.trim())
+        if(isNaN(number)) throw new Error(`Invaild number "${number}"`)
+        return number
+      })
+    }).flat()
+
+    return Ok(ret)
+  } catch(e) {
+    return Err(e)
+  }
+}
+
 export function parsePositionString(options: Arguments, startPosition: number = 0, name: string): Result<string, Error> {
   const value = options._.slice(startPosition)
   

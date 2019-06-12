@@ -1,9 +1,9 @@
 import parseArgs, { Arguments } from 'yargs-parser'
 import issueManager from '../issueManger'
-import { Issue, State } from '../provider'
-import { parsePositionNumber, makeHelpOptions, HandlerOptions } from '../argv'
-import { renderError } from '../render'
-import { margin } from '../tui'
+import { State } from '../provider'
+import { makeHelpOptions, HandlerOptions, parsePositionNumbers } from '../argv'
+import { renderError, renderNumbers, renderIssuesNumber } from '../render'
+import { margin, error } from '../tui'
 
 const TOGGLE_STATUS_OPTIONS: { [K in State]: { text: string } } = {
   [State.Open]: { text: `opened` },
@@ -18,9 +18,18 @@ export function toggleIssue(state: State) {
     if(opts.help) return printHelp(name, text)
 
     try {
-      const number: number = parsePositionNumber(opts, 0, `<number>`).unwrap()
-      const issue: Issue = (await issueManager.toggleIssue(number, state)).unwrap()
-      margin(`Issue #${number} ${text}, see ${issue.url}`)
+      const numbers: number[] = parsePositionNumbers(opts, 0, `<number>`).unwrap()
+      const [ issues, errors ] = (await issueManager.toggleIssue(numbers, state)).unwrap()
+      
+      if(errors.length > 0) {
+        const errorNumbers = errors.map(({ number }) => number)
+        error(`Oops, issue ${renderNumbers(errorNumbers)} can't ${text}`)
+        // renderError()
+      }
+
+      if(issues.length > 0) {
+        margin(`Issue ${renderIssuesNumber(issues)} ${text}`)
+      }
     } catch(e) {
       renderError(e)
     }
@@ -32,7 +41,11 @@ export const closeIssue = toggleIssue(State.Close)
 
 function printHelp(name: string, command: string): void {
   console.log(`
-Usage: ${name} ${command} [...options]
+Usage: ${name} ${command} <...number> [...options]
+
+Positional:
+
+numbers:                - Numbers, at least one
 
 Options:
 
@@ -40,6 +53,8 @@ Options:
 
 Examples:
 
-${name} ${command}
+${name} ${command} 42
+${name} ${command} 41 42
+${name} ${command} 41,42,43
 `)
 }

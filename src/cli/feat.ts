@@ -70,7 +70,7 @@ function appendLable(labels: string[], label: string): string[] {
 }
 
 function overrideRenameOptions(title: string): string {
-  return `[Feature Request] ${title}`
+  return parseTitle(title)
 }
 
 function makeCreateTemplate(title: string): string {

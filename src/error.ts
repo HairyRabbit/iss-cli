@@ -18,3 +18,12 @@ export function makeTitleRequiredError(command: string): Error {
 ${chalk.bold(command)} title was required
 `)
 }
+
+export function makeAuthenticationError(token: string, from: string): Error {
+  return new Error(`\
+Authentication failed
+
+Token: ${token}
+From: ${from}
+`)
+}
