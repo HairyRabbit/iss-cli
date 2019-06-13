@@ -1,3 +1,5 @@
+import { Token } from "./token"
+
 export const enum State { Open = 'open', Close = 'closed' }
 
 export function parseState(state: string): State {
@@ -53,5 +55,5 @@ export interface Provider {
 }
 
 export interface ProviderConstructor {
-  new(token: undefined | string, user: string, repo: string): Provider
+  new(token: Token, user: string, repo: string): Provider
 }

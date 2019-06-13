@@ -19,7 +19,7 @@ ${chalk.bold(command)} title was required
 `)
 }
 
-export function makeAuthenticationError(token: string, from: string): Error {
+export function makeAuthenticationError(token: string | undefined, from: string | undefined): Error {
   return new Error(`\
 Authentication failed
 

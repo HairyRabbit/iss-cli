@@ -9,6 +9,7 @@ import unquote from 'util-extra/string/unquote'
 import GitHub from './provider/github'
 import { Provider, Issue, IssueOptions, ProviderConstructor, ListIssueOptions } from './provider'
 import config from './config'
+import Token from './token'
 
 interface HttpError {
   number: number,
@@ -43,16 +44,19 @@ class IssueManager {
     if(useRemote.match(`github.com`)) {
       const githubConfig = config.readProviderConfig(GitHub.providerName)
       const ProviderConstructor: ProviderConstructor = GitHub
-      const token: string | undefined = undefined
-        || process.env.ISSCLI_GITHUB_TOKEN 
-        || process.env.ISSCLI_TOKEN 
-        || process.env.GITHUB_TOKEN
-        || githubConfig.token
+      const tokenReaders: [ string | undefined, string ][] = [
+        [ process.env.ISSCLI_GITHUB_TOKEN, `env.ISSCLI_GITHUB_TOKEN` ],
+        [ process.env.ISSCLI_TOKEN, `env.ISSCLI_TOKEN` ],
+        [ process.env.GITHUB_TOKEN, `env.GITHUB_TOKEN` ],
+        [ githubConfig.token, `config`]
+      ]
 
+      const tokenReader = tokenReaders.find(([ token ]) => undefined !== token)
+      const [ token, from ] = undefined === tokenReader ? [ undefined, undefined ] : tokenReader
       const ma = useRemote.match(/github.com:([^\/]+)\/([^]+).git/)
       if(null === ma) throw new Error(`Unknown username and repo`)
       const [, user, repo ] = ma
-      this.provider = new ProviderConstructor(token, user, repo)
+      this.provider = new ProviderConstructor(Token(token, from), user, repo)
     } else {
       throw new Error(`Unknown provider`)
     }

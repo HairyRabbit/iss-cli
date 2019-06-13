@@ -2,21 +2,23 @@ import Octokit, { IssuesListForRepoResponseItem, IssuesListForRepoParams, Issues
 import { Provider, Issue as ProviderIssue, IssueOptions, parseState, ListIssueOptions } from '../provider'
 import config from '../config'
 import { makeAuthenticationError } from '../error'
-import { identity as id } from 'lodash'
+import { Token } from '../token'
+import { renderNumbers } from '../render'
+
+type RequestError = Error & Omit<Octokit.Response<never>, 'data'>
 
 export default class Github implements Provider {
   public static providerName: string = `GitHub`
   private provider: Octokit
 
-  constructor(private token: undefined | string, private user: string, private repo: string) {
+  constructor(private token: Token, private user: string, private repo: string) {
     this.token = token
     this.user = user
     this.repo = repo
-    this.provider = new Octokit({ auth: `token ${this.token}` })
+    this.provider = new Octokit({ auth: `token ${this.token.token}` })
   }
 
   async login(username: string, password: string): Promise<string> {
-    
     const newProvider: Octokit = new Octokit({ auth: {
       username,
       password,
@@ -39,13 +41,15 @@ export default class Github implements Provider {
       return token
     } catch(res) {
       const status: undefined | number = res.status
+
       if(undefined !== status) {
         if(401 === status)  {
-          throw new Error(`Bad credentials, invalid username or password`)
+          throw makeAuthenticationError(this.token.token, this.token.from)
         }
       }
 
-      const errs: undefined | HookError['errors'] = res.errors
+      const errs: HookError['errors'] | undefined = res.errors
+      
       if(undefined !== errs) {
         const msgs = errs.map(({ code }) => code)
         throw new Error(msgs.join(`\n`))
@@ -67,7 +71,8 @@ export default class Github implements Provider {
         const issues = await this.provider.issues.listForRepo(opts)
         return issues.data.map(normalize)
       } catch(e) {
-        throw transformError(e)
+        this.transformError(e)
+        throw e
       }
     } else {
       const opts: SearchIssuesParams = buildIssueSearchOptions(this.user, this.repo, options)
@@ -75,7 +80,8 @@ export default class Github implements Provider {
         const issues = await this.provider.search.issuesAndPullRequests(opts)
         return issues.data.items.map(normalize)
       } catch(e) {
-        throw transformError(e)
+        this.transformError(e)
+        throw e
       }
     }
   }
@@ -89,7 +95,8 @@ export default class Github implements Provider {
       })
       return normalize(issue.data)
     } catch(e) {
-      throw transformError(e)
+      this.transformError(e, [number])
+      throw e
     }
   }
 
@@ -100,7 +107,8 @@ export default class Github implements Provider {
       const issue = await this.provider.issues.create(opts)
       return normalize(issue.data)
     } catch(e) {
-      throw transformError(e)
+      this.transformError(e)
+      throw e
     }
   }
 
@@ -111,7 +119,21 @@ export default class Github implements Provider {
       const issue = await this.provider.issues.update(opts)
       return normalize(issue.data)
     } catch(e) {
-      throw transformError(e)
+      this.transformError(e, [number])
+      throw e
+    }
+  }
+
+  private transformError(error: RequestError, numbers: number[] = []): void {
+    switch(error.status) {
+      case 500:
+        if(!error.message.match(/ETIMEDOUT/)) return
+        throw new Error(`Connect timeout`)
+      case 401:
+        throw makeAuthenticationError(this.token.token, this.token.from)
+      case 404:
+        throw new Error(`Issue ${renderNumbers(numbers)} was not found`)
+      default: return
     }
   }
 }
@@ -194,29 +216,5 @@ function normalize(issue: IssuesListForRepoResponseItem): ProviderIssue {
     createAt: new Date(issue.created_at),
     updateAt: new Date(issue.updated_at),
     closeAt: null === closeAt ? null : new Date(closeAt)
-  }
-}
-
-type RequestError = Error & Omit<Octokit.Response<never>, 'data'>
-
-type TransformErrorOptions = {
-  token: string,
-  tokenFrom: string
-} & {
-  number: number
-}
-
-function transformError({ token, tokenFrom, number }: TransformErrorOptions, custom: (err: RequestError) => Error = id) {
-  return (err: RequestError): Error => {
-    switch(err.status) {
-      case 500:
-        if(!err.message.match(/ETIMEDOUT/)) return err
-        return new Error(`Connect timeout`)
-      case 401:
-        return makeAuthenticationError(token, tokenFrom)
-      case 404:
-        return new Error(`Issue #${number.toString()} was not found`)
-      default: return custom(err)
-    }
   }
 }
