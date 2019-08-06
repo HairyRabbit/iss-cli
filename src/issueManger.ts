@@ -10,7 +10,7 @@ import GitHub from './provider/github'
 import { Provider, Issue, IssueOptions, ProviderConstructor, ListIssueOptions } from './provider'
 import config from './config'
 import Token from './token'
-import * as git from 'nodegit'
+import git from 'nodegit'
 
 interface HttpError {
   number: number,
@@ -93,11 +93,11 @@ class IssueManager {
   public async createIssue(options: IssueOptions): Promise<Issue> {
     const { branch, ...createOptions } = options
     const issue = await this.provider.create(createOptions)
-    
-    if(!branch) return issue
+
+    if(undefined === branch) return issue
     
     try {
-      await this.checkoutBranch(branch(issue.id))
+      await this.checkoutBranch(branch(issue.number))
       return issue
     } catch(e) {
       this.toggleIssue([issue.id], `closed`)

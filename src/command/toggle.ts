@@ -41,7 +41,7 @@ export const closeIssue = toggleIssue(State.Close)
 
 function printHelp(name: string, command: string): void {
   console.log(`
-Usage: ${name} ${command} <...number> [...options]
+Usage: ${name} ${command} <number...> [options]
 
 Positional:
 

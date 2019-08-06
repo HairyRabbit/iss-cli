@@ -14,8 +14,7 @@ interface CreateOptions extends HandlerOptions {
 export default async function createIssue(args: string[], options: CreateOptions): Promise<void> {
   const { name, preOptions = id } = options
   const opts = parseArgs(args, makeHelpOptions({
-    boolean: [`edit`],
-    string: [`branch`],
+    boolean: [`edit`, `branch`],
     array: [{ key: 'label' }],
     alias: {
       edit: `e`,
@@ -23,7 +22,8 @@ export default async function createIssue(args: string[], options: CreateOptions
       branch: `b`
     },
     default: {
-      body: false
+      body: false,
+      branch: false
     },
     configuration: {
       ['populate--']: true
