@@ -93,8 +93,16 @@ class IssueManager {
   public async createIssue(options: IssueOptions): Promise<Issue> {
     const { branch, ...createOptions } = options
     const issue = await this.provider.create(createOptions)
-    if(branch) await this.checkoutBranch(branch(issue.id))
-    return issue
+    
+    if(!branch) return issue
+    
+    try {
+      await this.checkoutBranch(branch(issue.id))
+      return issue
+    } catch(e) {
+      this.toggleIssue([issue.id], `closed`)
+      throw e
+    }
   }
 
   public async toggleIssue(numbers: number[], state: `open` | `closed`): Promise<Optional<[Issue[], HttpError[]]>> {
@@ -132,8 +140,10 @@ class IssueManager {
     }
   }
 
-  public async checkoutBranch(branch: string): Promise<void> {
+  public async checkoutBranch(branchName: string): Promise<void> {
     const repo = await git.Repository.open(this.root)
+    const commit = await repo.getHeadCommit()
+    const branch = await repo.createBranch(branchName, commit)
     await repo.checkoutBranch(branch)
   }
 }
