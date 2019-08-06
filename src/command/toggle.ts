@@ -14,7 +14,7 @@ export function toggleIssue(state: State) {
   return async (args: string[], options: HandlerOptions): Promise<void> => {
     const { name } = options
     const { text } = TOGGLE_STATUS_OPTIONS[state]
-    const opts: Arguments = parseArgs(args, makeHelpOptions())
+    const opts = parseArgs(args, makeHelpOptions())
     if(opts.help) return printHelp(name, text)
 
     try {
