@@ -49,7 +49,8 @@ function overrideCreateOptions(options: IssueOptions): IssueOptions {
   return {
     ...options,
     title: parseTitle(options.title),
-    labels: appendLable(parseLabels(options.labels), `feature`)
+    labels: appendLable(parseLabels(options.labels), `feature`),
+    branch: id => `feat-#${id.toString()}`
   }
 }
 

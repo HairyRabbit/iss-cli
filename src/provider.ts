@@ -39,6 +39,7 @@ export interface IssueOptions {
   body?: string
   labels?: string[]
   state?: string
+  branch?(id: number): string
 }
 
 export interface OptionsOverrider<T> {

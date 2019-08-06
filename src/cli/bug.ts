@@ -42,7 +42,8 @@ function overrideCreateOptions(options: IssueOptions): IssueOptions {
     labels: [
       ...(options.labels || []),
       `bug`
-    ]
+    ],
+    branch: id => `fix-#${id.toString()}`
   }
 }
 

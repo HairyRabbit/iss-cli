@@ -10,6 +10,7 @@ import GitHub from './provider/github'
 import { Provider, Issue, IssueOptions, ProviderConstructor, ListIssueOptions } from './provider'
 import config from './config'
 import Token from './token'
+import * as git from 'nodegit'
 
 interface HttpError {
   number: number,
@@ -17,17 +18,19 @@ interface HttpError {
 }
 
 class IssueManager {
+  private root!: string
   private provider!: Provider
   constructor() {
     this.init()
   }
 
   private init() {
-    const root: undefined | string = findUp(`.git`, { cwd: process.cwd(), type: 'directory' })
+    const root = findUp(`.git`, { cwd: process.cwd(), type: 'directory' })
     if(undefined === root) throw new Error(`Can't find ".git" directory`)
-    const content: string = fs.readFileSync(path.resolve(root, 'config'), `utf-8`)
-    const parsedContent: { [key: string]: any } = ini.parse(content)
-    const keys: string[] = Object.keys(parsedContent)
+    this.root = root
+    const content = fs.readFileSync(path.resolve(root, 'config'), `utf-8`)
+    const parsedContent = ini.parse(content)
+    const keys = Object.keys(parsedContent)
     const [remote, remotes]: [{ [key: string]: string }, string[]] = keys
       .filter(key => key.startsWith(`remote`))
       .reduce<[{ [key: string]: string }, string[]]>(([remote, remotes], key) => {
@@ -41,25 +44,23 @@ class IssueManager {
     if(0 === remotes.length) throw new Error(`no remote found`)
     const useRemote = remote.origin || remote[remotes[0]]
 
-    if(useRemote.match(`github.com`)) {
-      const githubConfig = config.readProviderConfig(GitHub.providerName)
-      const ProviderConstructor: ProviderConstructor = GitHub
-      const tokenReaders: [ string | undefined, string ][] = [
-        [ process.env.ISSCLI_GITHUB_TOKEN, `env.ISSCLI_GITHUB_TOKEN` ],
-        [ process.env.ISSCLI_TOKEN, `env.ISSCLI_TOKEN` ],
-        [ process.env.GITHUB_TOKEN, `env.GITHUB_TOKEN` ],
-        [ githubConfig.token, `config`]
-      ]
+    if(!useRemote.match(`github.com`)) throw new Error(`Unknown provider`)
+    
+    const githubConfig = config.readProviderConfig(GitHub.providerName)
+    const ProviderConstructor: ProviderConstructor = GitHub
+    const tokenReaders: [ string | undefined, string ][] = [
+      [ process.env.ISSCLI_GITHUB_TOKEN, `env.ISSCLI_GITHUB_TOKEN` ],
+      [ process.env.ISSCLI_TOKEN, `env.ISSCLI_TOKEN` ],
+      [ process.env.GITHUB_TOKEN, `env.GITHUB_TOKEN` ],
+      [ githubConfig.token, `config`]
+    ]
 
-      const tokenReader = tokenReaders.find(([ token ]) => undefined !== token)
-      const [ token, from ] = undefined === tokenReader ? [ undefined, undefined ] : tokenReader
-      const ma = useRemote.match(/github.com:([^\/]+)\/([^]+).git/)
-      if(null === ma) throw new Error(`Unknown username and repo`)
-      const [, user, repo ] = ma
-      this.provider = new ProviderConstructor(Token(token, from), user, repo)
-    } else {
-      throw new Error(`Unknown provider`)
-    }
+    const tokenReader = tokenReaders.find(([ token ]) => undefined !== token)
+    const [ token, from ] = undefined === tokenReader ? [ undefined, undefined ] : tokenReader
+    const ma = useRemote.match(/github.com:([^\/]+)\/([^]+).git/)
+    if(null === ma) throw new Error(`Unknown username and repo`)
+    const [, user, repo ] = ma
+    this.provider = new ProviderConstructor(Token(token, from), user, repo)
   }
 
   public async getToken(username: string, password: string): Promise<Result<string, Error>> {
@@ -68,7 +69,7 @@ class IssueManager {
     }
     
     try {
-      const token: string = await this.provider.login(username, password)
+      const token = await this.provider.login(username, password)
       return Ok(token)
     } catch(e) {
       return Err(e instanceof Error ? e : new Error(e))
@@ -89,8 +90,11 @@ class IssueManager {
     return Some(issue)
   }
 
-  public async createIssue(options: IssueOptions) {
-    return await this.provider.create(options)
+  public async createIssue(options: IssueOptions): Promise<Issue> {
+    const { branch, ...createOptions } = options
+    const issue = await this.provider.create(createOptions)
+    if(branch) await this.checkoutBranch(branch(issue.id))
+    return issue
   }
 
   public async toggleIssue(numbers: number[], state: `open` | `closed`): Promise<Optional<[Issue[], HttpError[]]>> {
@@ -126,6 +130,11 @@ class IssueManager {
     } catch(e) {
       return None
     }
+  }
+
+  public async checkoutBranch(branch: string): Promise<void> {
+    const repo = await git.Repository.open(this.root)
+    await repo.checkoutBranch(branch)
   }
 }
 

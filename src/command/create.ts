@@ -13,12 +13,14 @@ interface CreateOptions extends HandlerOptions {
 
 export default async function createIssue(args: string[], options: CreateOptions): Promise<void> {
   const { name, preOptions = id } = options
-  const opts: Arguments = parseArgs(args, makeHelpOptions({
+  const opts = parseArgs(args, makeHelpOptions({
     boolean: [`edit`],
+    string: [`branch`],
     array: [{ key: 'label' }],
     alias: {
       edit: `e`,
-      label: `l`
+      label: `l`,
+      branch: `b`
     },
     default: {
       body: false
@@ -31,7 +33,7 @@ export default async function createIssue(args: string[], options: CreateOptions
   if(opts.help) return printHelp(name)
 
   try {
-    const title: string | null = parsePositionString(opts, 0, `<...title>`).unwrapOr(null)
+    const title = parsePositionString(opts, 0, `<title>`).unwrapOr(null)
     let issueOptions: IssueOptions
     if(opts.edit) {
       issueOptions = await getOptionsFromEdit(title, opts, options)
@@ -40,6 +42,13 @@ export default async function createIssue(args: string[], options: CreateOptions
       issueOptions = {
         title,
         labels: opts.label
+      }
+    }
+
+    if(opts.branch) {
+      issueOptions = {
+        ...issueOptions,
+        branch: id => `iss-#${id}`
       }
     }
 
@@ -91,12 +100,13 @@ function parseMetas(content: string, regexp: RegExp, begin: RegExpExecArray): [I
 
 function printHelp(name: string): void {
   console.log(`
-Usage: ${name} add  <...title> [...options]
+Usage: ${name} add  <title> [options]
 
 Options:
 
 --label, -l             - Add label
 --edit, -e              - Use editor to write content
+--branch, -b            - Checkout a new branch
 --help, -h              - Show helper
 
 Examples:
