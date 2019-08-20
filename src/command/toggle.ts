@@ -1,5 +1,5 @@
 import parseArgs from 'yargs-parser'
-import issueManager from '../issueManger'
+import createIssueManager from '../issueManger'
 import { State } from '../provider'
 import { makeHelpOptions, HandlerOptions, parsePositionNumbers } from '../argv'
 import { renderError, renderNumbers, renderIssuesNumber } from '../render'
@@ -18,6 +18,7 @@ export function toggleIssue(state: State) {
     if(opts.help) return printHelp(name, text)
 
     try {
+      const issueManager = await createIssueManager()
       const numbers = parsePositionNumbers(opts, 0, `<number>`).unwrap()
       const [ issues, errors ] = (await issueManager.toggleIssue(numbers, state)).unwrap()
       

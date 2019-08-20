@@ -1,6 +1,6 @@
 import parseArgs, { Arguments } from 'yargs-parser'
 import { identity as id } from 'lodash'
-import issueManager from '../issueManger'
+import createIssueManager from '../issueManger'
 import { renderIssue, renderError } from '../render'
 import { parsePositionString, makeHelpOptions, HandlerOptions } from '../argv'
 import { Issue, IssueOptions } from '../provider'
@@ -52,6 +52,7 @@ export default async function createIssue(args: string[], options: CreateOptions
       }
     }
 
+    const issueManager = await createIssueManager()
     const issue: Issue = await issueManager.createIssue(preOptions(issueOptions))
     renderIssue(issue)
   } catch(e) {

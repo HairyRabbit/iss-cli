@@ -47,6 +47,7 @@ export interface OptionsOverrider<T> {
 }
 
 export interface Provider {
+  init?(): Promise<void>
   login?(username: string, password: string): Promise<string>
   signout?(): Promise<void>
   find(options?: ListIssueOptions): Promise<Issue[]>

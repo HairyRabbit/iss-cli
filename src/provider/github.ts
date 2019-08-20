@@ -18,6 +18,28 @@ export default class Github implements Provider {
     this.provider = new Octokit({ auth: `token ${this.token.token}` })
   }
 
+  async init() {
+    await this.getIssueableRepo(this.user, this.repo)
+  }
+
+  async getIssueableRepo(owner: string, repo: string): Promise<void> {
+    const res = await this.provider.repos.get({ owner, repo })
+    if(res.data.has_issues) return
+    if(!res.data.fork) return
+
+    const parent = res.data.parent
+    if(!res.data.parent) return
+    const [ parentOwner, parentRepo ] = parent.full_name.split('/')
+    
+    if(parent.has_issues) {
+      this.user = parentOwner
+      this.repo = parentRepo
+      return
+    }
+
+    return await this.getIssueableRepo(parentOwner, parentRepo)
+  }
+
   async login(username: string, password: string): Promise<string> {
     const newProvider: Octokit = new Octokit({ auth: {
       username,

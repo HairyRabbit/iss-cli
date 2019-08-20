@@ -1,6 +1,6 @@
 import parseArgs, { Arguments } from 'yargs-parser'
 import { identity as id } from 'lodash'
-import issueManager from '../issueManger'
+import createIssueManager from '../issueManger'
 import { parsePositionNumber, makeHelpOptions, HandlerOptions } from "../argv"
 import { renderIssue, renderError } from "../render"
 
@@ -17,6 +17,7 @@ export default async function showIssue(args: string[], options: HandlerOptions)
 
   try {
     const number = parsePositionNumber(opts, 0, `<number>`).unwrap()
+    const issueManager = await createIssueManager()
     const issue = (await issueManager.getIssue(number)).unwrap()
     renderIssue(postData(issue), { 
       metas: opts.metas

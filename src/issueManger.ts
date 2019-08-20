@@ -20,11 +20,8 @@ interface HttpError {
 class IssueManager {
   private root!: string
   private provider!: Provider
-  constructor() {
-    this.init()
-  }
 
-  private init() {
+  async init() {
     const root = findUp(`.git`, { cwd: process.cwd(), type: 'directory' })
     if(undefined === root) throw new Error(`Can't find ".git" directory`)
     this.root = root
@@ -42,7 +39,7 @@ class IssueManager {
       }, [Object.create(null), []])
     
     if(0 === remotes.length) throw new Error(`no remote found`)
-    const useRemote = remote.upstream || remote.origin || remote[remotes[0]]
+    const useRemote = remote.origin || remote[remotes[0]]
 
     if(!useRemote.match(`github.com`)) throw new Error(`Unknown provider`)
     
@@ -61,6 +58,7 @@ class IssueManager {
     if(null === ma) throw new Error(`Unknown username and repo`)
     const [, user, repo ] = ma
     this.provider = new ProviderConstructor(Token(token, from), user, repo)
+    this.provider.init && await this.provider.init()
   }
 
   public async getToken(username: string, password: string): Promise<Result<string, Error>> {
@@ -148,4 +146,8 @@ class IssueManager {
   }
 }
 
-export default new IssueManager()
+export default async function createIssueManager(): Promise<IssueManager> {
+  const iss = new IssueManager()
+  await iss.init()
+  return iss
+}
