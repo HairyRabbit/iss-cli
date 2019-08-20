@@ -4,6 +4,7 @@
   "description": "Git repo issue manager",
   "scripts": {
     "start": "tsc -w",
+    "build": "tsc",
     "test": "jest"
   },
   "repository": {

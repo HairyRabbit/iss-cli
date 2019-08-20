@@ -42,7 +42,7 @@ class IssueManager {
       }, [Object.create(null), []])
     
     if(0 === remotes.length) throw new Error(`no remote found`)
-    const useRemote = remote.origin || remote[remotes[0]]
+    const useRemote = remote.upstream || remote.origin || remote[remotes[0]]
 
     if(!useRemote.match(`github.com`)) throw new Error(`Unknown provider`)
     
