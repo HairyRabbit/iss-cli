@@ -1,7 +1,7 @@
 import parseArgs, { Arguments } from 'yargs-parser'
 import prompts from 'prompts'
 import chalk from 'chalk'
-import issueManager from '../issueManger'
+import createIssueManager from '../issueManger'
 import { makeHelpOptions, HandlerOptions } from "../argv"
 import { renderError } from "../render"
 import { margin } from '../tui'
@@ -38,6 +38,7 @@ export default async function loginIssue(args: string[], options: HandlerOptions
   }
 
   try {
+    const issueManager = await createIssueManager()
     const token = (await issueManager.getToken(username, password)).unwrap()
     margin(`Created token ${chalk.blue.bold(token)} successful`)
   } catch(e) {

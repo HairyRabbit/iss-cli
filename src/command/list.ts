@@ -1,9 +1,9 @@
 import parseArgs, { Arguments } from 'yargs-parser'
 import { identity as id } from 'lodash'
-import issueManager from '../issueManger'
 import { Issue, State, ListIssueOptions } from '../provider'
 import { renderIssueList, renderError } from '../render'
 import { makeHelpOptions, parsePositionString, HandlerOptions } from '../argv'
+import createIssueManager from '../issueManger'
 
 export default async function listIssue(args: string[], options: HandlerOptions): Promise<void> {
   const { name, preOptions = id } = options
@@ -31,6 +31,8 @@ export default async function listIssue(args: string[], options: HandlerOptions)
       state: transformState(opts.closed, opts.all),
       labels: opts.label
     })
+
+    const issueManager = await createIssueManager()
     const issues: Issue[] = await issueManager.listIssues(listIssueOptions)
   
     renderIssueList(issues, {
